@@ -10,9 +10,15 @@ namespace Emu8080
         static void Main(string[] args) {
             var rom = File.ReadAllBytes(@"C:\Users\krobertson\Documents\GitHub\Emu8080\Emu8080\rom\invaders");
             CPU.State.LoadROM(rom);
-            while (CPU.Step(true, false)) {
-                // work
+            int counter = 0;
+            while (true) {
+                var check = CPU.Step(true, false);
+                counter++;
+                if (!check) {
+                    break;
+                }
             }
+            Console.WriteLine($"Executed {counter} instructions.");
             Console.Read();
         }
     }

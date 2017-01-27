@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Emu8080 {
@@ -84,7 +85,7 @@ namespace Emu8080 {
         public bool CalculateParity(byte value) {
             var bits = new BitArray(value);
             var oneBits = 0;
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < bits.Length; i++) {
                 oneBits += bits[i] ? 1 : 0;
             }
             return (oneBits % 2) == 0;
@@ -100,7 +101,7 @@ namespace Emu8080 {
         }
 
         public void DoRegisterSub(byte source, ref byte dest, bool usecarry = false) {
-            ushort result = (ushort)(source + dest + (usecarry ? (Carry ? 1 : 0) : 0));
+            ushort result = (ushort)(source - dest - (usecarry ? (Carry ? 1 : 0) : 0));
             Zero = (result & 0xFF) == 0;
             Sign = (result & 0x80) == 1;
             Carry = result > 0xFF;
@@ -292,27 +293,32 @@ namespace Emu8080 {
             { 0x8D, new CPUInstruction("ADC    L", () => { State.DoRegisterAdd(State.Registers[0x06], ref State.Registers[0x00], usecarry: true); }, 1) },
             { 0x8E, new CPUInstruction("ADC    M", () => { State.DoRegisterAdd(State.Memory[State.RegisterToAddress(0x05, 0x06)], ref State.Registers[0x00], usecarry: true); }, 1) },
             { 0x8F, new CPUInstruction("ADC    A", () => { State.DoRegisterAdd(State.Registers[0x00], ref State.Registers[0x00], usecarry: true); }, 1) },
+            { 0xC2, new CPUInstruction("JNZ    ", () => { State.ProgramCounter = State.Zero ? State.ProgramCounter : (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3); }, 3) },
             { 0xC3, new CPUInstruction("JMP    ", () => { State.ProgramCounter = (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3); }, 3) },
             { 0xC5, new CPUInstruction("PUSH   B", () => {
-                State.StackPointer -= 2;
-                Array.Copy(new byte[] { State.Registers[0x01], State.Registers[0x02] }, 0x00, State.Memory, State.StackPointer, 0x02);
+                State.StackPointer -= 0x02;
+                Array.Copy(State.Registers, 0x01, State.Memory, State.StackPointer, 0x02);
             }, 1) },
+            { 0xC9, new CPUInstruction("RET   ", () => {
+                State.ProgramCounter = State.GetTwoBytesJoined(State.StackPointer);
+                State.StackPointer += 0x02;
+            }, 0) },
             { 0xCD, new CPUInstruction("CALL   ", () => {
-                State.StackPointer -= 2;
+                State.StackPointer -= 0x02;
                 Array.Copy(new byte[] { (byte)(State.ProgramCounter / 0xFF), (byte)(State.ProgramCounter & 0xFF) }, 0x00, State.Memory, State.StackPointer, 0x02);
                 State.ProgramCounter = (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3);
             }, 3) },
             { 0xDB, new CPUInstruction("IN     ", () => { /* Does nothing for now. */ }, 2) },
             { 0xD5, new CPUInstruction("PUSH   D", () => {
-                State.StackPointer -= 2;
-                Array.Copy(new byte[] { State.Registers[0x03], State.Registers[0x04] }, 0x00, State.Memory, State.StackPointer, 0x02);
+                State.StackPointer -= 0x02;
+                Array.Copy(State.Registers, 0x03, State.Memory, State.StackPointer, 0x02);
             }, 1) },
             { 0xE5, new CPUInstruction("PUSH   H", () => {
-                State.StackPointer -= 2;
-                Array.Copy(new byte[] { State.Registers[0x05], State.Registers[0x06] }, 0x00, State.Memory, State.StackPointer, 0x02);
+                State.StackPointer -= 0x02;
+                Array.Copy(State.Registers, 0x05, State.Memory, State.StackPointer, 0x02);
             }, 1) },
             { 0xF5, new CPUInstruction("PUSH   PSW", () => {
-                State.StackPointer -= 2;
+                State.StackPointer -= 0x02;
                 Array.Copy(new byte[] { State.Registers[0x00], State.GetFlagByte() }, 0x00, State.Memory, State.StackPointer, 0x02);
             }, 1) }
         };
@@ -339,7 +345,7 @@ namespace Emu8080 {
                 State.ProgramCounter += instruct.Arity;
                 return true;
             } catch {
-                Console.WriteLine($"Error: Opcode 0x{inst.ToString("X2")} not found.");
+                Console.WriteLine($"[0x{State.ProgramCounter.ToString("X4")}] Error: Opcode 0x{inst.ToString("X2")} not found.");
                 return false;
             }
         }
