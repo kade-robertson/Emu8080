@@ -6,6 +6,15 @@ namespace Emu8080
 {
     public class CPU 
     {
+        public enum Register {
+            A = 0,
+            B = 1,
+            C = 2,
+            D = 3,
+            E = 4,
+            H = 5,
+            L = 6
+        }
         // A 7b array which stores the accumulator and various registers.
         public byte[] Registers;
 
@@ -18,19 +27,19 @@ namespace Emu8080
         // A 16b program counter which points to the next instruction.
         public ushort ProgramCounter;
 
-        // A bit flag which is set if the result is negative.
+        // If the MSB bit of an instruction has the value ‘1’, this flag is set; or else, it is reset.
         public bool Sign;
 
-        // A bit flag which is set if the result is zero.
+        // If the result of an instruction has the value ‘0’, this zero flag is set; or else, it is reset.
         public bool Zero;
 
-        // A bit flag which is set if the number of bits in the result is even.
+        // If the number of the set bits in the result has even value, this flag is set; or else, it is reset.
         public bool Parity;
 
-        // A bit flag which is set if the result required a carry or borrow.
+        // If there was a carry during borrow, addition, subtraction or comparison, this flag is set; or else, it is reset.
         public bool Carry;
 
-        // A bit flag used for binary-coded decimal arithmetic.
+        // If there was a carry out from 3-bit to 4-bit of the result, this flag is set; otherwise, it is reset.
         public bool AuxCarry;
 
         public CPU() {
@@ -43,6 +52,38 @@ namespace Emu8080
             Parity = false;
             Carry = false;
             AuxCarry = false;
+        }
+
+        private byte GetNextByte() {
+            return Memory[ProgramCounter + 1];
+        }
+
+        private byte GetByteAfterNext() {
+            return Memory[ProgramCounter + 2];
+        }
+
+        private ushort GetTwoBytes() {
+            return (ushort)(GetByteAfterNext() * 0x100 + GetNextByte());
+        }
+
+        public void Step() {
+            var inst = Memory[ProgramCounter];
+            switch (inst) {
+                case 0x00: // NOP
+                    ProgramCounter += 1;
+                    break;
+                case 0x01: // LXI B, D16
+                    Registers[(int)Register.B] = GetByteAfterNext();
+                    Registers[(int)Register.C] = GetNextByte();
+                    ProgramCounter += 1;
+                    break;
+                case 0xC2: // JNZ (addr)
+                    ProgramCounter = Zero ? ProgramCounter : GetTwoBytes();
+                    break;
+                case 0xC3: // JMP (addr)
+                    ProgramCounter = GetTwoBytes();
+                    break;
+            }
         }
     }
 }
