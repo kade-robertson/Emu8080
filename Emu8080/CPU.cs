@@ -60,7 +60,7 @@ namespace Emu8080 {
         }
 
         public byte GetNextByte(ushort index) {
-            return Memory[ProgramCounter + 1];
+            return Memory[index + 1];
         }
 
         public byte GetByteAfterNext(ushort index) {
@@ -351,11 +351,10 @@ namespace Emu8080 {
                 State.Memory[State.StackPointer] = State.Registers[0x02];
                 State.Memory[State.StackPointer + 1] = State.Registers[0x01];
             }, 1) },
-            { 0xC9, new CPUInstruction("RET   ", () => {
-                Console.WriteLine($"{State.Memory[State.StackPointer - 2].ToString("X2") + State.Memory[State.StackPointer - 1].ToString("X2") + State.Memory[State.StackPointer].ToString("X2") + State.Memory[State.StackPointer + 1].ToString("X2") + State.Memory[State.StackPointer + 2].ToString("X2")}");
+            { 0xC9, new CPUInstruction("RET    ", () => {
                 State.ProgramCounter = State.GetTwoBytesJoined((ushort)(State.StackPointer - 1));
                 State.StackPointer += 0x02;
-            }, 0) },
+            }, 3) },
             { 0xCD, new CPUInstruction("CALL   ", () => {
                 State.StackPointer -= 0x02;
                 Array.Copy(new byte[] { (byte)(State.ProgramCounter & 0xFF), (byte)(State.ProgramCounter / 0x100) }, 0x00, State.Memory, State.StackPointer, 0x02);
