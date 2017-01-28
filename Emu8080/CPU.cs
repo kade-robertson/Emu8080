@@ -94,63 +94,106 @@ namespace Emu8080 {
             return (oneBits % 2) == 0;
         }
 
+        public void FlagSet(ushort input, byte auxin, bool do_sign = true, bool do_zero = true, bool do_parity = true, bool do_carry = false, bool do_auxcarry = true)
+        {
+            if (do_sign) Sign = (input >> 7) == 1;
+            if (do_zero) Zero = input == 0;
+            if (do_parity) Parity = CalculateParity((byte)(input & 0xFF));
+            if (do_carry) Carry = (input > 0xFF);
+            if (do_auxcarry) AuxCarry = (auxin & 0xF) > (input & 0xF);
+        }
+
+        public void FlagSet(short input, byte auxin, bool do_sign = true, bool do_zero = true, bool do_parity = true, bool do_carry = false, bool do_auxcarry = true)
+        {
+            if (do_sign) Sign = (input >> 7) == 1;
+            if (do_zero) Zero = input == 0;
+            if (do_parity) Parity = CalculateParity((byte)(input & 0xFF));
+            if (do_carry) Carry = (input > 0xFF) || (input < 0);
+            if (do_auxcarry) AuxCarry = (auxin & 0xF) > (input & 0xF);
+        }
+
         public void DoAccumulatorAnd(byte source, ref byte dest) {
             byte result = (byte)(dest & source);
-            Zero = (result & 0xFF) == 0;
-            Sign = (result & 0x80) == 1;
-            Carry = result > 0xFF;
-            Parity = CalculateParity((byte)(result & 0xFF));
+            FlagSet(result, dest, do_carry: true);
             dest = (byte)(result & 0xFF);
         }
 
         public void DoRegisterAdd(byte source, ref byte dest, bool usecarry = false) {
             ushort result = (ushort)(source + dest + (usecarry ? (Carry ? 1 : 0) : 0));
-            Zero = (result & 0xFF) == 0;
-            Sign = (result & 0x80) == 1;
-            Carry = result > 0xFF;
-            Parity = CalculateParity((byte)(result & 0xFF));
+            FlagSet(result, dest, do_carry: true);
             dest = (byte)(result & 0xFF);
         }
 
         public void DoRegisterSub(byte source, ref byte dest, bool usecarry = false) {
             ushort result = (ushort)(dest - source - (usecarry ? (Carry ? 1 : 0) : 0));
-            Zero = (result & 0xFF) == 0;
-            Sign = (result & 0x80) == 1;
-            Carry = result > 0xFF;
-            Parity = CalculateParity((byte)(result & 0xFF));
+            FlagSet(result, dest, do_carry: true);
             dest = (byte)(result & 0xFF);
         }
 
         public void DoRegisterIncrement(byte regpointer) {
             byte result = (byte)(Registers[regpointer] + 1);
-            Zero = (result & 0xFF) == 0;
-            Sign = (result & 0x80) == 1;
-            Parity = CalculateParity((byte)(result & 0xFF));
+            FlagSet(result, Registers[regpointer]);
             Registers[regpointer] = result;
         }
 
         public void DoRegisterDecrement(byte regpointer) {
             byte result = (byte)(Registers[regpointer] - 1);
-            Zero = (result & 0xFF) == 0;
-            Sign = (result & 0x80) == 1;
-            Parity = CalculateParity((byte)(result & 0xFF));
+            FlagSet(result, Registers[regpointer]);
             Registers[regpointer] = result;
         }
 
         public void DoMemoryDecrement(ushort pointer) {
             byte result = (byte)(Memory[pointer] - 1);
-            Zero = (result & 0xFF) == 0;
-            Sign = (result & 0x80) == 1;
-            Parity = CalculateParity((byte)(result & 0xFF));
+            FlagSet(result, Memory[pointer]);
             Memory[pointer] = result;
         }
 
         public void DoMemoryIncrement(ushort pointer) {
             byte result = (byte)(Memory[pointer] + 1);
-            Zero = (result & 0xFF) == 0;
-            Sign = (result & 0x80) == 1;
-            Parity = CalculateParity((byte)(result & 0xFF));
+            FlagSet(result, Memory[pointer]);
             Memory[pointer] = result;
+        }
+
+        public void RotateAccumulatorLeft()
+        {
+            byte result = (byte)(((Registers[0x00] & 0x80) >> 7) | (Registers[0x00] << 1));
+            Carry = (Registers[0x00] & 0x80) == 0x80;
+            Registers[0x00] = result;
+        }
+
+        public void RotateAccumulatorRight()
+        {
+            byte result = (byte)(((Registers[0x00] & 0x01) << 7) | (Registers[0x00] >> 1));
+            Carry = (Registers[0x00] & 0x01) == 1;
+            Registers[0x00] = result;
+        }
+
+        public void AccumulatorAnd(byte input)
+        {
+            byte result = (byte)(Registers[0x00] & input);
+            FlagSet(result, Registers[0x00], do_carry: true);
+            Registers[0x00] = result;
+        }
+
+        public void AccumulatorAdd(byte input)
+        {
+            byte result = (byte)(Registers[0x00] + input);
+            FlagSet(result, Registers[0x00], do_carry: true);
+            Registers[0x00] = (byte)(result & 0xFF);
+        }
+
+        public ushort DoDoubleAdd(ushort source, ushort dest)
+        {
+            uint result = (uint)(source + dest);
+            Carry = (result > 0xFFFF);
+            return (ushort)(result & 0xFFFF);
+        }
+
+        public void RegisterSwap(byte reg1, byte reg2)
+        {
+            var temp = Registers[reg1];
+            Registers[reg1] = Registers[reg2];
+            Registers[reg2] = temp;
         }
 
         public byte GetFlagByte() {
@@ -180,7 +223,7 @@ namespace Emu8080 {
         public void Reset() {
             Registers = new byte[0x7];
             Memory = new byte[0x10000];
-            StackPointer = 0xF000;
+            StackPointer = 0xFFFE;
             ProgramCounter = 0x0;
             Sign = false;
             Zero = false;
@@ -192,7 +235,7 @@ namespace Emu8080 {
         public CPUState() {
             Registers = new byte[0x7];
             Memory = new byte[0x10000];
-            StackPointer = 0xF000;
+            StackPointer = 0xFFFE;
             ProgramCounter = 0x0;
             Sign = false;
             Zero = false;
@@ -224,15 +267,37 @@ namespace Emu8080 {
             { 0x01, new CPUInstruction("LXI    B,", () => { Array.Copy(State.GetTwoBytes(State.ProgramCounter), 0x00, State.Registers, 0x01, 0x02); }, 3) },
             { 0x05, new CPUInstruction("DCR    B", () => { State.DoRegisterDecrement(0x01); }, 1) },
             { 0x06, new CPUInstruction("MVI    B,", () => { State.Registers[0x01] = State.GetNextByte(State.ProgramCounter); }, 2) },
+            { 0x07, new CPUInstruction("RLC    ", () => { State.RotateAccumulatorLeft(); }, 1) },
+            { 0x09, new CPUInstruction("DAD    B", () => {
+                var result = State.DoDoubleAdd(State.RegisterToAddress(0x05, 0x06), State.RegisterToAddress(0x01, 0x02));
+                State.Registers[0x05] = (byte)(result / 0x100);
+                State.Registers[0x06] = (byte)(result & 0xFF);
+            }, 1) },
+            { 0x0D, new CPUInstruction("DCR    C", () => { State.DoRegisterIncrement(0x02); }, 1) },
+            { 0x0E, new CPUInstruction("MVI    C,", () => { State.Registers[0x02] = State.GetNextByte(State.ProgramCounter); }, 2) },
+            { 0x0F, new CPUInstruction("RRC    ", () => { State.RotateAccumulatorRight(); }, 1) },
             { 0x11, new CPUInstruction("LXI    D,", () => { Array.Copy(State.GetTwoBytes(State.ProgramCounter), 0x00, State.Registers, 0x03, 0x02); }, 3) },
             { 0x13, new CPUInstruction("INX    D", () => { Array.Copy(State.IncrementRegisterPair(0x03, 0x04), 0x00, State.Registers, 0x03, 0x02); }, 1) },
+            { 0x19, new CPUInstruction("DAD    D", () => {
+                var result = State.DoDoubleAdd(State.RegisterToAddress(0x05, 0x06), State.RegisterToAddress(0x03, 0x04));
+                State.Registers[0x05] = (byte)(result / 0x100);
+                State.Registers[0x06] = (byte)(result & 0xFF);
+            }, 1) },
             { 0x1A, new CPUInstruction("LDAX   D", () => { State.Registers[0x00] = State.Memory[State.RegisterToAddress(0x03, 0x04)]; }, 1) },
             { 0x20, new CPUInstruction("RIM    ", () => { /* Coming eventually. */ }, 1) },
             { 0x21, new CPUInstruction("LXI    H,", () => { Array.Copy(State.GetTwoBytes(State.ProgramCounter), 0x00, State.Registers, 0x05, 0x02); }, 3) },
             { 0x23, new CPUInstruction("INX    H", () => { Array.Copy(State.IncrementRegisterPair(0x05, 0x06), 0x00, State.Registers, 0x05, 0x02); }, 1) },
+            { 0x26, new CPUInstruction("MVI    H,", () => { State.Registers[0x05] = State.GetNextByte(State.ProgramCounter); }, 2) },
+            { 0x29, new CPUInstruction("DAD    H", () => {
+                var result = State.DoDoubleAdd(State.RegisterToAddress(0x05, 0x06), State.RegisterToAddress(0x05, 0x06));
+                State.Registers[0x05] = (byte)(result / 0x100);
+                State.Registers[0x06] = (byte)(result & 0xFF);
+            }, 1) },
+            { 0x2E, new CPUInstruction("MVI    L,", () => { State.Registers[0x06] = State.GetNextByte(State.ProgramCounter); }, 2) },
             { 0x31, new CPUInstruction("LXI    SP,", () => { State.StackPointer = State.GetTwoBytesJoined(State.ProgramCounter); }, 3) },
             { 0x32, new CPUInstruction("STA    ", () => { Array.Copy(State.Registers, 0x00, State.Memory, State.GetTwoBytesJoined(State.ProgramCounter), 0x01); }, 3) },
             { 0x35, new CPUInstruction("DCR    M", () => { State.DoMemoryDecrement(State.RegisterToAddress(0x05, 0x06)); }, 1) },
+            { 0x36, new CPUInstruction("MVI    M,", () => { State.Memory[State.RegisterToAddress(0x05, 0x06)] = State.GetNextByte(State.ProgramCounter); }, 2) },
             { 0x3E, new CPUInstruction("MVI    A,", () => { State.Registers[0x00] = State.GetNextByte(State.ProgramCounter); }, 2) },
             { 0x3F, new CPUInstruction("CMC    ", () => { State.Carry = !State.Carry; }, 1) },
             { 0x40, new CPUInstruction("MOV    B,B", () => {  }, 1) },
@@ -351,6 +416,9 @@ namespace Emu8080 {
                 State.Memory[State.StackPointer] = State.Registers[0x02];
                 State.Memory[State.StackPointer + 1] = State.Registers[0x01];
             }, 1) },
+            { 0xC6, new CPUInstruction("ADI    ", () => {
+                State.AccumulatorAdd(State.GetNextByte(State.ProgramCounter));
+            }, 2) },
             { 0xC9, new CPUInstruction("RET    ", () => {
                 State.ProgramCounter = State.GetTwoBytesJoined((ushort)(State.StackPointer - 1));
                 State.StackPointer += 0x02;
@@ -360,6 +428,7 @@ namespace Emu8080 {
                 Array.Copy(new byte[] { (byte)(State.ProgramCounter & 0xFF), (byte)(State.ProgramCounter / 0x100) }, 0x00, State.Memory, State.StackPointer, 0x02);
                 State.ProgramCounter = (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3);
             }, 3) },
+            { 0xD3, new CPUInstruction("OUT    ", () => { /* Does nothing for now. */ }, 2) },
             { 0xDB, new CPUInstruction("IN     ", () => { /* Does nothing for now. */ }, 2) },
             { 0xD1, new CPUInstruction("POP    D", () => {
                 State.Registers[0x04] = State.Memory[State.StackPointer];
@@ -381,6 +450,13 @@ namespace Emu8080 {
                 State.Memory[State.StackPointer] = State.Registers[0x06];
                 State.Memory[State.StackPointer + 1] = State.Registers[0x05];
             }, 1) },
+            { 0xE6, new CPUInstruction("ANI    ", () => {
+                State.AccumulatorAnd(State.GetNextByte(State.ProgramCounter));
+            }, 2) },
+            { 0xEB, new CPUInstruction("XCHG", () => {
+                State.RegisterSwap(0x05, 0x03);
+                State.RegisterSwap(0x06, 0x04);
+            }, 1) },
             { 0xF1, new CPUInstruction("POP    PSW", () => {
                 State.SetFlags(State.Memory[State.StackPointer]);
                 State.Registers[0x00] = State.Memory[State.StackPointer + 1];
@@ -392,7 +468,11 @@ namespace Emu8080 {
                 State.Memory[State.StackPointer] = State.GetFlagByte();
                 State.Memory[State.StackPointer + 1] = State.Registers[0x00];
             }, 1) },
-            { 0xFB, new CPUInstruction("EI     ", () => { State.InterruptProcessingEnabled = false; }, 1) }
+            { 0xFB, new CPUInstruction("EI     ", () => { State.InterruptProcessingEnabled = false; }, 1) },
+            { 0xFE, new CPUInstruction("CPI    ", () => {
+                short result = (short)(State.Registers[0x00] - State.GetNextByte(State.ProgramCounter));
+                State.FlagSet(result, State.Registers[0x00], do_carry: true);
+            }, 2) }
         };
 
         public static Dictionary<byte, string> InstructionText = new Dictionary<byte, string>();
@@ -403,7 +483,8 @@ namespace Emu8080 {
                 var instruct = Instructions[inst];
                 if (debug) {
                     var outs = new StringBuilder();
-                    outs.Append($"[{string.Join(" ", State.Registers.Select(x => x.ToString("X2")))} {State.StackPointer.ToString("X4")} {State.Memory[State.StackPointer].ToString("X2") + State.Memory[State.StackPointer + 1].ToString("X2")}] 0x{State.ProgramCounter.ToString("X4")}: {instruct.InstructionString}");
+                    outs.Append($"[{State.GetFlagByte().ToString("X2")} {string.Join(" ", State.Registers.Select(x => x.ToString("X2")))} {State.StackPointer.ToString("X4")} {State.Memory[State.StackPointer].ToString("X2")}]"); 
+                    outs.Append($" 0x{State.ProgramCounter.ToString("X4")}: {instruct.InstructionString}");
                     if (instruct.Arity == 2) {
                         outs.Append($"${State.GetNextByte(State.ProgramCounter).ToString("X2")}");
                     } else if (instruct.Arity == 3) {
@@ -416,7 +497,7 @@ namespace Emu8080 {
                 }
                 State.ProgramCounter += instruct.Arity;
                 return true;
-            } catch {
+            } catch (Exception ex) {
                 Console.WriteLine($"[0x{State.ProgramCounter.ToString("X4")}] Error: Opcode 0x{inst.ToString("X2")} not found.");
                 return false;
             }
