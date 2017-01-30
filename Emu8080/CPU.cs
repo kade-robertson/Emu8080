@@ -55,6 +55,7 @@ namespace Emu8080 {
         public byte CarryBit = 0x01;
         public byte ParityBit = 0x04;
         public byte AuxCarryBit = 0x10;
+        public byte InterruptBit = 0x20;
         public byte ZeroBit = 0x40;
         public byte SignBit = 0x80;
 
@@ -63,9 +64,6 @@ namespace Emu8080 {
 
         // A 16b program counter which points to the next instruction.
         public ushort ProgramCounter;
-
-        // Tells the processor whether to process interrupts. Currently un-used.
-        public bool InterruptProcessingEnabled;
 
         public bool LoadROM(byte[] romdata) {
             if (romdata.Length > 0x2000) {
@@ -117,7 +115,6 @@ namespace Emu8080 {
                 }
             }
             if (do_parity) {
-                if (input > 0xFF) Console.WriteLine(input);
                 if (((input & 0xFF) % 2) == 0) {
                     Flags |= ParityBit;
                 } else {
@@ -178,10 +175,31 @@ namespace Emu8080 {
             }
         }
 
-        public void DoAccumulatorAnd(byte source, ref byte dest) {
-            byte result = (byte)(dest & source);
-            FlagSet(result, dest, do_carry: true);
-            dest = (byte)(result & 0xFF);
+        public byte AndBytes(byte left, byte right) {
+            var result = (byte)(left & right);
+            Console.WriteLine($"{left} & {right} = {result} ($20C0 = {Memory[0x20C0]})");
+            FlagSet(result, left, right, do_carry: true);
+            if ((((left & 0x08) >> 0x03) | ((right & 0x08) >> 0x03)) > 0) {
+                Flags &= (byte)(~AuxCarryBit & 0xFF);
+            }
+            //Flags &= (byte)(~CarryBit & 0xFF);
+            return result;
+        }
+
+        public byte XorBytes(byte left, byte right) {
+            var result = (byte)(left ^ right);
+            FlagSet(result, left, right, do_carry: true);
+            Flags &= (byte)(~AuxCarryBit & 0xFF);
+            Flags &= (byte)(~CarryBit & 0xFF);
+            return result;
+        }
+
+        public byte OrBytes(byte left, byte right) {
+            var result = (byte)(left | right);
+            FlagSet(result, left, right, do_carry: true);
+            Flags &= (byte)(~AuxCarryBit & 0xFF);
+            Flags &= (byte)(~CarryBit & 0xFF);
+            return result;
         }
 
         public byte IncrementByte(byte input) {
@@ -200,7 +218,7 @@ namespace Emu8080 {
             if (carry && (Flags & CarryBit) > 0) {
                 right++;
             }
-            ushort result = (ushort)(left + right);
+            var result = (ushort)(left + right);
             FlagSet(result, left, right, do_carry: true);
             return (byte)(result & 0xFF);
         }
@@ -209,7 +227,7 @@ namespace Emu8080 {
             if (carry && (Flags & CarryBit) > 0) {
                 right++;
             }
-            ushort result = (ushort)(left - right);
+            var result = (ushort)(left - right);
             FlagSet(result, left, right, do_carry: true);
             return (byte)(result & 0xFF);
         }
@@ -271,7 +289,7 @@ namespace Emu8080 {
             sb.Append((Flags & ZeroBit) > 0 ? "z" : ".");
             sb.Append((Flags & SignBit) > 0 ? "s" : ".");
             sb.Append((Flags & ParityBit) > 0 ? "p" : ".");
-            sb.Append((Flags & AuxCarryBit) > 0 ? "a" : ".");
+            sb.Append((Flags & AuxCarryBit) > 0 ? "a" : ((Flags & InterruptBit) > 0 ? "i" : "."));
             sb.Append((Flags & CarryBit) > 0 ? "c" : ".");
             return sb.ToString();
         }
@@ -332,12 +350,17 @@ namespace Emu8080 {
                 State.Registers[0x05] = (byte)(result / 0x100);
                 State.Registers[0x06] = (byte)(result & 0xFF);
             }, 1) },
+            { 0x2A, new CPUInstruction("LHLD   ", () => {
+                var addr = State.GetTwoBytesJoined(State.ProgramCounter);
+                State.Registers[0x05] = State.Memory[addr + 1];
+                State.Registers[0x06] = State.Memory[addr];
+            }, 3) },
             { 0x2E, new CPUInstruction("MVI    L,", () => { State.Registers[0x06] = State.GetNextByte(State.ProgramCounter); }, 2) },
             { 0x31, new CPUInstruction("LXI    SP,", () => { State.StackPointer = State.GetTwoBytesJoined(State.ProgramCounter); }, 3) },
             { 0x32, new CPUInstruction("STA    ", () => { Array.Copy(State.Registers, 0x00, State.Memory, State.GetTwoBytesJoined(State.ProgramCounter), 0x01); }, 3) },
             { 0x35, new CPUInstruction("DCR    M", () => { State.Memory[State.HLRegister] = State.DecrementByte(State.Memory[State.HLRegister]); }, 1) },
             { 0x36, new CPUInstruction("MVI    M,", () => { State.Memory[State.HLRegister] = State.GetNextByte(State.ProgramCounter); }, 2) },
-            { 0x3A, new CPUInstruction("LDA    A,", () => { State.Registers[0x01] = State.Memory[State.GetTwoBytesJoined(State.ProgramCounter)]; }, 3) },
+            { 0x3A, new CPUInstruction("LDA    A,", () => { State.Registers[0x00] = State.Memory[State.GetTwoBytesJoined(State.ProgramCounter)]; }, 3) },
             { 0x3E, new CPUInstruction("MVI    A,", () => { State.Registers[0x00] = State.GetNextByte(State.ProgramCounter); }, 2) },
             { 0x3F, new CPUInstruction("CMC    ", () => { State.Flags &= (byte)(~State.CarryBit & 0xFF); }, 1) },
             { 0x40, new CPUInstruction("MOV    B,B", () => {  }, 1) },
@@ -436,20 +459,32 @@ namespace Emu8080 {
             { 0x9D, new CPUInstruction("SBB    L", () => { State.Registers[0x00] = State.SubBytes(State.Registers[0x06], State.Registers[0x00], carry: true); }, 1) },
             { 0x9E, new CPUInstruction("SBB    M", () => { State.Registers[0x00] = State.SubBytes(State.Memory[State.HLRegister], State.Registers[0x00], carry: true); }, 1) },
             { 0x9F, new CPUInstruction("SBB    A", () => { State.Registers[0x00] = State.SubBytes(State.Registers[0x00], State.Registers[0x00], carry: true); }, 1) },
-            { 0xA0, new CPUInstruction("ANA    B", () => { State.DoAccumulatorAnd(State.Registers[0x01], ref State.Registers[0x00]); }, 1) },
-            { 0xA1, new CPUInstruction("ANA    C", () => { State.DoAccumulatorAnd(State.Registers[0x02], ref State.Registers[0x00]); }, 1) },
-            { 0xA2, new CPUInstruction("ANA    D", () => { State.DoAccumulatorAnd(State.Registers[0x03], ref State.Registers[0x00]); }, 1) },
-            { 0xA3, new CPUInstruction("ANA    E", () => { State.DoAccumulatorAnd(State.Registers[0x04], ref State.Registers[0x00]); }, 1) },
-            { 0xA4, new CPUInstruction("ANA    H", () => { State.DoAccumulatorAnd(State.Registers[0x05], ref State.Registers[0x00]); }, 1) },
-            { 0xA5, new CPUInstruction("ANA    L", () => { State.DoAccumulatorAnd(State.Registers[0x06], ref State.Registers[0x00]); }, 1) },
-            { 0xA6, new CPUInstruction("ANA    M", () => { State.DoAccumulatorAnd(State.Memory[State.HLRegister], ref State.Registers[0x00]); }, 1) },
-            { 0xA7, new CPUInstruction("ANA    A", () => { State.DoAccumulatorAnd(State.Registers[0x00], ref State.Registers[0x00]); }, 1) },
+            { 0xA0, new CPUInstruction("ANA    B", () => { State.Registers[0x00] = State.AndBytes(State.Registers[0x01], State.Registers[0x00]); }, 1) },
+            { 0xA1, new CPUInstruction("ANA    C", () => { State.Registers[0x00] = State.AndBytes(State.Registers[0x02], State.Registers[0x00]); }, 1) },
+            { 0xA2, new CPUInstruction("ANA    D", () => { State.Registers[0x00] = State.AndBytes(State.Registers[0x03], State.Registers[0x00]); }, 1) },
+            { 0xA3, new CPUInstruction("ANA    E", () => { State.Registers[0x00] = State.AndBytes(State.Registers[0x04], State.Registers[0x00]); }, 1) },
+            { 0xA4, new CPUInstruction("ANA    H", () => { State.Registers[0x00] = State.AndBytes(State.Registers[0x05], State.Registers[0x00]); }, 1) },
+            { 0xA5, new CPUInstruction("ANA    L", () => { State.Registers[0x00] = State.AndBytes(State.Registers[0x06], State.Registers[0x00]); }, 1) },
+            { 0xA6, new CPUInstruction("ANA    M", () => { State.Registers[0x00] = State.AndBytes(State.Memory[State.HLRegister], State.Registers[0x00]); }, 1) },
+            { 0xA7, new CPUInstruction("ANA    A", () => { State.Registers[0x00] = State.AndBytes(State.Registers[0x00], State.Registers[0x00]); }, 1) },
+            { 0xA8, new CPUInstruction("XRA    B", () => { State.Registers[0x00] = State.XorBytes(State.Registers[0x01], State.Registers[0x00]); }, 1) },
+            { 0xA9, new CPUInstruction("XRA    C", () => { State.Registers[0x00] = State.XorBytes(State.Registers[0x02], State.Registers[0x00]); }, 1) },
+            { 0xAA, new CPUInstruction("XRA    D", () => { State.Registers[0x00] = State.XorBytes(State.Registers[0x03], State.Registers[0x00]); }, 1) },
+            { 0xAB, new CPUInstruction("XRA    E", () => { State.Registers[0x00] = State.XorBytes(State.Registers[0x04], State.Registers[0x00]); }, 1) },
+            { 0xAC, new CPUInstruction("XRA    H", () => { State.Registers[0x00] = State.XorBytes(State.Registers[0x05], State.Registers[0x00]); }, 1) },
+            { 0xAD, new CPUInstruction("XRA    L", () => { State.Registers[0x00] = State.XorBytes(State.Registers[0x06], State.Registers[0x00]); }, 1) },
+            { 0xAE, new CPUInstruction("XRA    M", () => { State.Registers[0x00] = State.XorBytes(State.Memory[State.HLRegister], State.Registers[0x00]); }, 1) },
+            { 0xAF, new CPUInstruction("XRA    A", () => { State.Registers[0x00] = State.XorBytes(State.Registers[0x00], State.Registers[0x00]); }, 1) },
             { 0xC1, new CPUInstruction("POP    B", () => {
                 State.Registers[0x02] = State.Memory[State.StackPointer];
                 State.Registers[0x01] = State.Memory[State.StackPointer + 1];
                 State.StackPointer += 0x02;
             }, 1) },
-            { 0xC2, new CPUInstruction("JNZ    ", () => { State.ProgramCounter = ((State.Flags & State.ZeroBit) > 0 ? State.ProgramCounter : (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3)); }, 3) },
+            { 0xC2, new CPUInstruction("JNZ    ", () => {
+                if ((State.Flags & State.ZeroBit) == 0) {
+                    State.ProgramCounter = (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3);
+                }
+            }, 3) },
             { 0xC3, new CPUInstruction("JMP    ", () => { State.ProgramCounter = (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3); }, 3) },
             { 0xC5, new CPUInstruction("PUSH   B", () => {
                 State.StackPointer -= 0x02;
@@ -463,23 +498,33 @@ namespace Emu8080 {
                 State.ProgramCounter = State.GetTwoBytesJoined((ushort)(State.StackPointer - 1));
                 State.StackPointer += 0x02;
             }, 3) },
+            { 0xCA, new CPUInstruction("JZ     ", () => {
+                if ((State.Flags & State.ZeroBit) != 0) {
+                    State.ProgramCounter = (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3);
+                }
+            }, 3) },
             { 0xCD, new CPUInstruction("CALL   ", () => {
                 State.StackPointer -= 0x02;
                 Array.Copy(new byte[] { (byte)(State.ProgramCounter & 0xFF), (byte)(State.ProgramCounter / 0x100) }, 0x00, State.Memory, State.StackPointer, 0x02);
                 State.ProgramCounter = (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3);
             }, 3) },
-            { 0xD3, new CPUInstruction("OUT    ", () => { /* Does nothing for now. */ }, 2) },
-            { 0xDB, new CPUInstruction("IN     ", () => { /* Does nothing for now. */ }, 2) },
             { 0xD1, new CPUInstruction("POP    D", () => {
                 State.Registers[0x04] = State.Memory[State.StackPointer];
                 State.Registers[0x03] = State.Memory[State.StackPointer + 1];
                 State.StackPointer += 0x02;
             }, 1) },
+            { 0xDA, new CPUInstruction("JC     ", () => {
+                if ((State.Flags & State.CarryBit) != 0) {
+                    State.ProgramCounter = (ushort)(State.GetTwoBytesJoined(State.ProgramCounter) - 3);
+                }
+            }, 3) },
+            { 0xD3, new CPUInstruction("OUT    ", () => { /* Does nothing for now. */ }, 2) },
             { 0xD5, new CPUInstruction("PUSH   D", () => {
                 State.StackPointer -= 0x02;
                 State.Memory[State.StackPointer] = State.Registers[0x04];
                 State.Memory[State.StackPointer + 1] = State.Registers[0x03];
             }, 1) },
+            { 0xDB, new CPUInstruction("IN     ", () => { /* Does nothing for now. */ }, 2) },
             { 0xE1, new CPUInstruction("POP    H", () => {
                 State.Registers[0x06] = State.Memory[State.StackPointer];
                 State.Registers[0x05] = State.Memory[State.StackPointer + 1];
@@ -502,13 +547,13 @@ namespace Emu8080 {
                 State.Registers[0x00] = State.Memory[State.StackPointer + 1];
                 State.StackPointer += 0x02;
             }, 1) },
-            { 0xF3, new CPUInstruction("DI     ", () => { State.InterruptProcessingEnabled = false; }, 1) },
+            { 0xF3, new CPUInstruction("DI     ", () => { State.Flags &= (byte)(~State.InterruptBit & 0xFF); }, 1) },
             { 0xF5, new CPUInstruction("PUSH   PSW", () => {
                 State.StackPointer -= 0x02;
                 State.Memory[State.StackPointer] = State.Flags;
                 State.Memory[State.StackPointer + 1] = State.Registers[0x00];
             }, 1) },
-            { 0xFB, new CPUInstruction("EI     ", () => { State.InterruptProcessingEnabled = false; }, 1) },
+            { 0xFB, new CPUInstruction("EI     ", () => { State.Flags |= State.InterruptBit; }, 1) },
             { 0xFE, new CPUInstruction("CPI    ", () => {
                 short result = (short)(State.Registers[0x00] - State.GetNextByte(State.ProgramCounter));
                 State.FlagSet(result, State.Registers[0x00], do_carry: true);
@@ -524,8 +569,8 @@ namespace Emu8080 {
                 if (debug) {
                     if ((!fullprint && (max - counter) < 25) || (debug && fullprint)) {
                         var outs = new StringBuilder();
-                        outs.Append($"[{State.Registers[0x00].ToString("X2")}{State.Flags.ToString("X2")} {State.BCRegister.ToString("X4")} {State.DERegister.ToString("X4")} {State.HLRegister.ToString("X4")} {State.StackPointer.ToString("X4")} {State.FlagStr()}]");
-                        outs.Append($" 0x{State.ProgramCounter.ToString("X4")}: {instruct.InstructionString}");
+                        //outs.Append($"[{State.Registers[0x00].ToString("X2")}{State.Flags.ToString("X2")} {State.BCRegister.ToString("X4")} {State.DERegister.ToString("X4")} {State.HLRegister.ToString("X4")} {State.StackPointer.ToString("X4")} {State.FlagStr()}] ");
+                        outs.Append($"0x{State.ProgramCounter.ToString("X4")}: {instruct.InstructionString}");
                         if (instruct.Arity == 2) {
                             outs.Append($"${State.GetNextByte(State.ProgramCounter).ToString("X2")}");
                         } else if (instruct.Arity == 3) {
