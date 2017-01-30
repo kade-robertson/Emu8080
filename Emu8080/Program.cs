@@ -12,7 +12,7 @@ namespace Emu8080
             CPU.State.LoadROM(rom);
             int counter = 0;
             int x = int.Parse(Console.ReadLine());
-            while (CPU.Step(true, false, false, counter, x)) {
+            while (CPU.Step(true, true, false, counter, x) && counter <= x) {
                 counter++;
             }
             Console.WriteLine($"{CPU.State.Memory[CPU.State.StackPointer].ToString("X2")}{CPU.State.Memory[CPU.State.StackPointer + 1].ToString("X2")}");

@@ -569,7 +569,7 @@ namespace Emu8080 {
                 if (debug) {
                     if ((!fullprint && (max - counter) < 25) || (debug && fullprint)) {
                         var outs = new StringBuilder();
-                        //outs.Append($"[{State.Registers[0x00].ToString("X2")}{State.Flags.ToString("X2")} {State.BCRegister.ToString("X4")} {State.DERegister.ToString("X4")} {State.HLRegister.ToString("X4")} {State.StackPointer.ToString("X4")} {State.FlagStr()}] ");
+                        outs.Append($"[{State.Registers[0x00].ToString("X2")}{State.Flags.ToString("X2")} {State.BCRegister.ToString("X4")} {State.DERegister.ToString("X4")} {State.HLRegister.ToString("X4")} {State.StackPointer.ToString("X4")} {State.FlagStr()}] ");
                         outs.Append($"0x{State.ProgramCounter.ToString("X4")}: {instruct.InstructionString}");
                         if (instruct.Arity == 2) {
                             outs.Append($"${State.GetNextByte(State.ProgramCounter).ToString("X2")}");
