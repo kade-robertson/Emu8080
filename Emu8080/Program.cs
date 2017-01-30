@@ -8,10 +8,11 @@ namespace Emu8080
     class Program 
     {
         static void Main(string[] args) {
-            var rom = File.ReadAllBytes(@"rom\invaders");
+            var rom = File.ReadAllBytes(@"..\..\..\rom\invaders");
             CPU.State.LoadROM(rom);
             int counter = 0;
-            while (CPU.Step(true, false)) {
+            int x = int.Parse(Console.ReadLine());
+            while (CPU.Step(true, false, false, counter, x) && counter < x) {
                 counter++;
             }
             Console.WriteLine($"Executed {counter} instructions.");
