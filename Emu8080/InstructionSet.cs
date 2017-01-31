@@ -27,22 +27,6 @@ namespace Emu8080
             Cycles = 7
         };
 
-        // 0x03
-        public static Instruction INR_B = new Instruction() {
-            Text = "INR   B",
-            Execute = (mem, args, reg, flag) => {
-                var result = (reg.B + 1) & 0xFF;
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.AuxCarry = (result & 0xF) == 0x0;
-                reg.B = (byte)result;
-                return true;
-            },
-            Arity = 1,
-            Cycles = 5
-        };
-
         // 0x04
         public static Instruction DCR_B = new Instruction() {
             Text = "DCR   B",
@@ -68,22 +52,6 @@ namespace Emu8080
             },
             Arity = 1,
             Cycles = 7
-        };
-
-        // 0x0C
-        public static Instruction INR_C = new Instruction() {
-            Text = "INR   C",
-            Execute = (mem, args, reg, flag) => {
-                var result = (reg.C + 1) & 0xFF;
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.AuxCarry = (result & 0xF) == 0x0;
-                reg.C = (byte)result;
-                return true;
-            },
-            Arity = 1,
-            Cycles = 5
         };
 
         // 0x0D
@@ -113,22 +81,6 @@ namespace Emu8080
             Cycles = 7
         };
 
-        // 0x13
-        public static Instruction INR_D = new Instruction() {
-            Text = "INR   H",
-            Execute = (mem, args, reg, flag) => {
-                var result = (reg.D + 1) & 0xFF;
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.AuxCarry = (result & 0xF) == 0x0;
-                reg.D = (byte)result;
-                return true;
-            },
-            Arity = 1,
-            Cycles = 5
-        };
-
         // 0x14
         public static Instruction DCR_D = new Instruction() {
             Text = "DCR   D",
@@ -156,22 +108,6 @@ namespace Emu8080
             Cycles = 7
         };
 
-        // 0x1C
-        public static Instruction INR_E = new Instruction() {
-            Text = "INR   E",
-            Execute = (mem, args, reg, flag) => {
-                var result = (reg.E + 1) & 0xFF;
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.AuxCarry = (result & 0xF) == 0x0;
-                reg.E = (byte)result;
-                return true;
-            },
-            Arity = 1,
-            Cycles = 5
-        };
-
         // 0x1D
         public static Instruction DCR_E = new Instruction() {
             Text = "DCR   E",
@@ -182,22 +118,6 @@ namespace Emu8080
                 flag.Parity = Utils.ParityTable[result] == 1;
                 flag.AuxCarry = (result & 0xF) != 0xF;
                 reg.E = (byte)result;
-                return true;
-            },
-            Arity = 1,
-            Cycles = 5
-        };
-
-        // 0x23
-        public static Instruction INR_H = new Instruction() {
-            Text = "INR   H",
-            Execute = (mem, args, reg, flag) => {
-                var result = (reg.H + 1) & 0xFF;
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.AuxCarry = (result & 0xF) == 0x0;
-                reg.H = (byte)result;
                 return true;
             },
             Arity = 1,
@@ -246,22 +166,6 @@ namespace Emu8080
             Cycles = 4
         };
 
-        // 0x2C
-        public static Instruction INR_L = new Instruction() {
-            Text = "INR   L",
-            Execute = (mem, args, reg, flag) => {
-                var result = (reg.L + 1) & 0xFF;
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.AuxCarry = (result & 0xF) == 0x0;
-                reg.L = (byte)result;
-                return true;
-            },
-            Arity = 1,
-            Cycles = 5
-        };
-
         // 0x2D
         public static Instruction DCR_L = new Instruction() {
             Text = "DCR   L",
@@ -289,22 +193,6 @@ namespace Emu8080
             Cycles = 4,
         };
 
-        // 0x33
-        public static Instruction INR_M = new Instruction() {
-            Text = "INR   M",
-            Execute = (mem, args, reg, flag) => {
-                var result = (mem[reg.HL] + 1) & 0xFF;
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.AuxCarry = (result & 0xF) == 0x0;
-                mem[reg.HL] = (byte)result;
-                return true;
-            },
-            Arity = 1,
-            Cycles = 10
-        };
-
         // 0x34
         public static Instruction DCR_M = new Instruction() {
             Text = "DCR   M",
@@ -327,22 +215,6 @@ namespace Emu8080
             Execute = (mem, args, reg, flag) => { flag.Carry = true; return true; },
             Arity = 1,
             Cycles = 4
-        };
-
-        // 0x3C
-        public static Instruction INR_A = new Instruction() {
-            Text = "INR   A",
-            Execute = (mem, args, reg, flag) => {
-                var result = (reg.A + 1) & 0xFF;
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.AuxCarry = (result & 0xF) == 0x0;
-                reg.A = (byte)result;
-                return true;
-            },
-            Arity = 1,
-            Cycles = 5
         };
 
         // 0x3D
@@ -369,7 +241,52 @@ namespace Emu8080
             Cycles = 4
         };
 
-        // 0x40 - 0x7F
+        // 0x04, 0x0C, 0x14, 0x1C, 0x24, 0x2C, 0x34, 0x3C
+        public static Instruction INR = new Instruction() {
+            Text = "INR    ",
+            Execute = (mem, args, reg, flag) => {
+                byte toinc = 0;
+                var retval = false;
+                switch ((args[0] & 0x3F) >> 3) {
+                    case 0: toinc = reg.B; break;
+                    case 1: toinc = reg.C; break;
+                    case 2: toinc = reg.D; break;
+                    case 3: toinc = reg.E; break;
+                    case 4: toinc = reg.H; break;
+                    case 5: toinc = reg.L; break;
+                    case 6: toinc = mem[reg.HL]; retval = true; break;
+                    case 7: toinc = reg.A; break;
+                }
+                toinc = (byte)((toinc + 1) & 0xFF);
+                flag.Sign = (toinc & 0x80) != 0;
+                flag.Zero = (toinc == 0);
+                flag.Parity = Utils.ParityTable[toinc] == 1;
+                flag.AuxCarry = (toinc & 0xF) != 0xF;
+                switch ((args[0] & 0x3F) >> 3) {
+                    case 0: reg.B = toinc; break;
+                    case 1: reg.C = toinc; break;
+                    case 2: reg.D = toinc; break;
+                    case 3: reg.E = toinc; break;
+                    case 4: reg.H = toinc; break;
+                    case 5: reg.L = toinc; break;
+                    case 6: mem[reg.HL] = toinc; break;
+                    case 7: reg.A = toinc; break;
+                }
+                return retval;
+            },
+            Arity = 1,
+            Cycles = 10,
+            LowCycles = 5
+        };
+
+        // 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47
+        // 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F
+        // 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57
+        // 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F
+        // 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67
+        // 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F
+        // 0x70, 0x71, 0x72, 0x73, 0x74, 0x75,     , 0x77
+        // 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F
         public static Instruction MOV = new Instruction() {
             Text = "MOV    ",
             Execute = (mem, args, reg, flag) => {
@@ -403,14 +320,14 @@ namespace Emu8080
         };
 
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
-            { 0x00, NOP    }, { 0x02, STAX_B }, { 0x03, INR_B  }, { 0x04, DCR_B  },
-            { 0x0C, INR_C  }, { 0x0D, DCR_C  },
-            { 0x12, STAX_D }, { 0x13, INR_D  }, { 0x14, DCR_D  },
-            { 0x1C, INR_E  }, { 0x1D, DCR_E  },
-            { 0x23, INR_H  }, { 0x24, DCR_H  }, { 0x27, DAA    },
-            { 0x2C, INR_L  }, { 0x2D, DCR_L  }, { 0x2F, CMA    },
-            { 0x33, INR_M  }, { 0x34, DCR_M  }, { 0x37, STC    },
-            { 0x3C, INR_A  }, { 0x3D, DCR_A  }, { 0x3F, CMC    },
+            { 0x00, NOP    }, { 0x02, STAX_B }, { 0x03, INR    }, { 0x04, DCR_B  },
+            { 0x0C, INR    }, { 0x0D, DCR_C  },
+            { 0x12, STAX_D }, { 0x13, INR    }, { 0x14, DCR_D  },
+            { 0x1C, INR    }, { 0x1D, DCR_E  },
+            { 0x23, INR    }, { 0x24, DCR_H  }, { 0x27, DAA    },
+            { 0x2C, INR    }, { 0x2D, DCR_L  }, { 0x2F, CMA    },
+            { 0x33, INR    }, { 0x34, DCR_M  }, { 0x37, STC    },
+            { 0x3C, INR    }, { 0x3D, DCR_A  }, { 0x3F, CMC    },
             { 0x40, MOV    }, { 0x41, MOV    }, { 0x42, MOV    }, { 0x43, MOV    }, { 0x44, MOV    }, { 0x45, MOV    }, { 0x46, MOV    }, { 0x47, MOV    },
             { 0x48, MOV    }, { 0x49, MOV    }, { 0x4A, MOV    }, { 0x4B, MOV    }, { 0x4C, MOV    }, { 0x4D, MOV    }, { 0x4E, MOV    }, { 0x4F, MOV    },
             { 0x50, MOV    }, { 0x51, MOV    }, { 0x52, MOV    }, { 0x53, MOV    }, { 0x54, MOV    }, { 0x55, MOV    }, { 0x56, MOV    }, { 0x57, MOV    },

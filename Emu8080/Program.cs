@@ -16,7 +16,7 @@ namespace Emu8080
             UnderflowTest();
             OverflowTest();
             DAATest();
-            MOVPrintTest();
+            MOVTest();
             Console.Read();
         }
 
@@ -68,18 +68,28 @@ namespace Emu8080
             Console.WriteLine("DAA test succeeded!");
         }
 
-        static void MOVPrintTest() {
+        static void MOVTest() {
             var program = new byte[] {
                 0x40,
-                0x4F,
-                0x72,
-                0x5E
+                0x51,
+                0x62,
+                0x73,
+                0x57
             };
             var cpu = new CPU(program);
+            cpu.Registers.B = 0xCA;
+            cpu.Registers.C = 0xFE;
+            cpu.Registers.E = 0xBA;
+            cpu.Registers.A = 0xBE;
             var counter = 0;
             while (counter < program.Length && cpu.Step()) {
                 counter += 1;
             }
+            Debug.Assert(cpu.Registers.B == 0xCA);
+            Debug.Assert(cpu.Registers.D == 0xBE);
+            Debug.Assert(cpu.Registers.H == 0xFE);
+            Debug.Assert(cpu.Memory[cpu.Registers.HL] == 0xBA);
+            Console.WriteLine("MOV test succeeded!");
         }
     }
 }

@@ -28,7 +28,8 @@ namespace Emu8080
                 if (debug) {
                     Console.WriteLine(GetDebugText(todo, args));
                 }
-                return todo.Execute(Memory, args, Registers, Flag);
+                var cycletouse = todo.Execute(Memory, args, Registers, Flag);
+                return true;
             } catch (Exception ex) {
                 Console.WriteLine($"[0x{Registers.PC.ToString("X4")}] Error: Opcode 0x{inst.ToString("X2")} not found.");
                 return false;
@@ -49,27 +50,11 @@ namespace Emu8080
             sb.Append(inst.Text);
             // special print rules
             if (inst == InstructionSet.MOV) {
-                switch ((args[0] & 0x3F) >> 3) {
-                    case 0: sb.Append("B"); break;
-                    case 1: sb.Append("C"); break;
-                    case 2: sb.Append("D"); break;
-                    case 3: sb.Append("E"); break;
-                    case 4: sb.Append("H"); break;
-                    case 5: sb.Append("L"); break;
-                    case 6: sb.Append("M"); break;
-                    case 7: sb.Append("A"); break;
-                }
+                sb.Append(Utils.RegisterFromBinary((byte)((args[0] & 0x3F) >> 3)));
                 sb.Append(",");
-                switch ((args[0] & 0x7)) {
-                    case 0: sb.Append("B"); break;
-                    case 1: sb.Append("C"); break;
-                    case 2: sb.Append("D"); break;
-                    case 3: sb.Append("E"); break;
-                    case 4: sb.Append("H"); break;
-                    case 5: sb.Append("L"); break;
-                    case 6: sb.Append("M"); break;
-                    case 7: sb.Append("A"); break;
-                }
+                sb.Append(Utils.RegisterFromBinary((byte)(args[0] & 0x7)));
+            } else if (inst == InstructionSet.INR) {
+                sb.Append(Utils.RegisterFromBinary((byte)((args[0] & 0x3F) >> 3)));
             }
             return sb.ToString();
         }
