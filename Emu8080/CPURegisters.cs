@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Emu8080 
 {
-    public class Registers 
+    public class CPURegisters 
     {
         public byte A; // accumulator
         public byte B;

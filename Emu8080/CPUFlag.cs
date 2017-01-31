@@ -14,7 +14,7 @@ namespace Emu8080
         Sign = 0x80
     }
 
-    public class Flag
+    public class CPUFlag
     {
         public bool Carry = false;
         public bool AuxCarry = false;

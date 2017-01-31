@@ -16,55 +16,70 @@ namespace Emu8080
             UnderflowTest();
             OverflowTest();
             DAATest();
+            MOVPrintTest();
             Console.Read();
         }
 
         static void UnderflowTest() {
             var program = new byte[] {
-                0x3D, // DCR A
+                0x3D // DCR A
             };
             var cpu = new CPU(program);
             var counter = 0;
-            while (cpu.Step() && counter < program.Length) {
+            while (counter < program.Length && cpu.Step()) {
                 counter += 1;
             }
-            Debug.Assert(cpu.CPURegisters.A == 0xFF);
-            Debug.Assert(cpu.CPUFlag.Sign == true);
-            Debug.Assert(cpu.CPUFlag.Parity == true);
+            Debug.Assert(cpu.Registers.A == 0xFF);
+            Debug.Assert(cpu.Flag.Sign == true);
+            Debug.Assert(cpu.Flag.Parity == true);
             Console.WriteLine("Underflow test succeeded!");
         }
 
         static void OverflowTest() {
             var program = new byte[] {
-                0x3C, // INR A
+                0x3C // INR A
             };
             var cpu = new CPU(program);
-            cpu.CPURegisters.A = 0xFF;
+            cpu.Registers.A = 0xFF;
             var counter = 0;
-            while (cpu.Step() && counter < program.Length) {
+            while (counter < program.Length && cpu.Step()) {
                 counter += 1;
             }
-            Debug.Assert(cpu.CPURegisters.A == 0x0);
-            Debug.Assert(cpu.CPUFlag.Parity == true);
-            Debug.Assert(cpu.CPUFlag.AuxCarry == true);
-            Debug.Assert(cpu.CPUFlag.Zero == true);
+            Debug.Assert(cpu.Registers.A == 0x0);
+            Debug.Assert(cpu.Flag.Parity == true);
+            Debug.Assert(cpu.Flag.AuxCarry == true);
+            Debug.Assert(cpu.Flag.Zero == true);
             Console.WriteLine("Overflow test succeeded!");
         }
 
         static void DAATest() {
             var program = new byte[] {
-                0x27, // DAA
+                0x27 // DAA
             };
             var cpu = new CPU(program);
-            cpu.CPURegisters.A = 0x9B;
+            cpu.Registers.A = 0x9B;
             var counter = 0;
-            while (cpu.Step() && counter < program.Length) {
+            while (counter < program.Length && cpu.Step()) {
                 counter += 1;
             }
-            Debug.Assert(cpu.CPURegisters.A == 0x1);
-            Debug.Assert(cpu.CPUFlag.Carry == true);
-            Debug.Assert(cpu.CPUFlag.AuxCarry == true);
+            Debug.Assert(cpu.Registers.A == 0x1);
+            Debug.Assert(cpu.Flag.Carry == true);
+            Debug.Assert(cpu.Flag.AuxCarry == true);
             Console.WriteLine("DAA test succeeded!");
+        }
+
+        static void MOVPrintTest() {
+            var program = new byte[] {
+                0x40,
+                0x4F,
+                0x72,
+                0x5E
+            };
+            var cpu = new CPU(program);
+            var counter = 0;
+            while (counter < program.Length && cpu.Step()) {
+                counter += 1;
+            }
         }
     }
 }

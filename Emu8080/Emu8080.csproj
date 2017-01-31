@@ -41,12 +41,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CPU.cs" />
-    <Compile Include="Flag.cs" />
+    <Compile Include="CPUFlag.cs" />
     <Compile Include="Instruction.cs" />
     <Compile Include="InstructionSet.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Registers.cs" />
+    <Compile Include="CPURegisters.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
