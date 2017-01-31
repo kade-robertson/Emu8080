@@ -8,17 +8,19 @@ namespace Emu8080
 {
     public class Instruction 
     {
-        public string Text;
-                   //    mem,   args, registers, flag
-        public Action<byte[], byte[], Registers, Flag> Execute;
-        public byte Arity;
-        public byte Cycles;
+        //    mem,   args, registers, flag, success
+        public Func<byte[], byte[], Registers, Flag, bool> Execute;
+        public string Text;     // the appropriate text representation
+        public byte Arity;      // how many arguments the instruction has (including itself)
+        public byte Cycles;     // how many cycles this takes when successful
+        public byte LowCycles;  // how many cycles this takes when unsuccessful (hardly used)
 
-        public Instruction(string text, Action<byte[], byte[], Registers, Flag> execute, byte arity, byte cycles) {
+        public Instruction(string text, Func<byte[], byte[], Registers, Flag, bool> execute, byte arity, byte cycles, byte lowcycles) {
             Text = text;
             Execute = execute;
             Arity = arity;
             Cycles = cycles;
+            LowCycles = lowcycles;
         }
 
         public Instruction() {
@@ -26,6 +28,7 @@ namespace Emu8080
             Execute = null;
             Arity = 0;
             Cycles = 0;
+            LowCycles = 0;
         }
     }
 }

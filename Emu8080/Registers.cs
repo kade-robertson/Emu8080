@@ -8,13 +8,16 @@ namespace Emu8080
 {
     public class Registers 
     {
-        public byte A;
+        public byte A; // accumulator
         public byte B;
         public byte C;
         public byte D;
         public byte E;
         public byte H;
         public byte L;
+
+        public ushort PC; // program counter
+        public ushort SP; // stack pointer
 
         public ushort BC {
             get {
