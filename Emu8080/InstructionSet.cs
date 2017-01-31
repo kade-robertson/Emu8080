@@ -392,7 +392,7 @@ namespace Emu8080
                     case 3: reg.E = tomov; break;
                     case 4: reg.H = tomov; break;
                     case 5: reg.L = tomov; break;
-                    case 6: tomov = mem[reg.HL]; retval = true; break;
+                    case 6: mem[reg.HL] = tomov; retval = true; break;
                     case 7: reg.A = tomov; break;
                 }
                 return retval;
