@@ -22,7 +22,7 @@ namespace Emu8080
 
         static void UnderflowTest() {
             var program = new byte[] {
-                0x3E // DCR A
+                0x3D // DCR A
             };
             var cpu = new CPU(program);
             var counter = 0;
@@ -37,7 +37,7 @@ namespace Emu8080
 
         static void OverflowTest() {
             var program = new byte[] {
-                0x3D // INR A
+                0x3C // INR A
             };
             var cpu = new CPU(program);
             cpu.Registers.A = 0xFF;
@@ -70,11 +70,11 @@ namespace Emu8080
 
         static void MOVTest() {
             var program = new byte[] {
-                0x40,
-                0x51,
-                0x62,
-                0x73,
-                0x57
+                0x40, // MOV B,B
+                0x51, // MOV D,C
+                0x62, // MOV H,D
+                0x73, // MOV M,E
+                0x57  // MOV D,A
             };
             var cpu = new CPU(program);
             cpu.Registers.B = 0xCA;

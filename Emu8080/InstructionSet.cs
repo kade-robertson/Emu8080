@@ -15,6 +15,9 @@ namespace Emu8080
             Execute = (mem, args, reg, flag) => { return true; },
             Arity = 1,
             Cycles = 4,
+            GetPrintString = (args) => {
+                return "NOP";
+            }
         };
 
         // STAX - Store Accumulator
@@ -31,7 +34,11 @@ namespace Emu8080
                 return true;
             },
             Arity = 1,
-            Cycles = 7
+            Cycles = 7,
+            GetPrintString = (args) => {
+                var touse = (args[0] & 0x10) == 0x10 ? 'D' : 'B';
+                return $"LDAX   {touse}";
+            }
         };
 
         // LDAX - Load Accumulator
@@ -48,7 +55,11 @@ namespace Emu8080
                 return true;
             },
             Arity = 1,
-            Cycles = 7
+            Cycles = 7,
+            GetPrintString = (args) => {
+                var touse = (args[0] & 0x10) == 0x10 ? 'D' : 'B';
+                return $"STAX   {touse}";
+            }
         };
 
         // DAA - Decimal Adjust Accumulator
@@ -75,7 +86,10 @@ namespace Emu8080
                 return true;
             },
             Arity = 1,
-            Cycles = 4
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return $"DAA";
+            }
         };
 
         // CMA - Complement Accumulator
@@ -88,6 +102,9 @@ namespace Emu8080
             },
             Arity = 1,
             Cycles = 4,
+            GetPrintString = (args) => {
+                return $"CMA";
+            }
         };
 
         // STC - Set Carry
@@ -96,7 +113,10 @@ namespace Emu8080
             Text = "STC",
             Execute = (mem, args, reg, flag) => { flag.Carry = true; return true; },
             Arity = 1,
-            Cycles = 4
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return $"STC";
+            }
         };
 
         // CMC - Complement Carry
@@ -105,13 +125,16 @@ namespace Emu8080
             Text = "CMC",
             Execute = (mem, args, reg, flag) => { flag.Carry = !flag.Carry; return true; },
             Arity = 1,
-            Cycles = 4
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return $"CMC";
+            }
         };
 
         // INR - Increment Register or Memory
         // 0x04, 0x0C, 0x14, 0x1C, 0x24, 0x2C, 0x34, 0x3C
         public static Instruction INR = new Instruction() {
-            Text = "INR    ",
+            Text = "INR",
             Execute = (mem, args, reg, flag) => {
                 byte toinc = 0;
                 var retval = false;
@@ -144,13 +167,16 @@ namespace Emu8080
             },
             Arity = 1,
             Cycles = 10,
-            LowCycles = 5
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return $"INR    {Utils.RegisterFromBinary((byte)((args[0] & 0x3F) >> 3))}";
+            }
         };
 
         // DCR - Decrement Register or Memory
         // 0x05, 0x0D, 0x15, 0x1D, 0x25, 0x2D, 0x35, 0x3D
         public static Instruction DCR = new Instruction() {
-            Text = "DCR    ",
+            Text = "DCR",
             Execute = (mem, args, reg, flag) => {
                 byte toinc = 0;
                 var retval = false;
@@ -183,7 +209,10 @@ namespace Emu8080
             },
             Arity = 1,
             Cycles = 10,
-            LowCycles = 5
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return $"DCR    {Utils.RegisterFromBinary((byte)((args[0] & 0x3F) >> 3))}";
+            }
         };
 
         // MOV - Move Instruction
@@ -196,7 +225,7 @@ namespace Emu8080
         // 0x70, 0x71, 0x72, 0x73, 0x74, 0x75,     , 0x77
         // 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F
         public static Instruction MOV = new Instruction() {
-            Text = "MOV    ",
+            Text = "MOV",
             Execute = (mem, args, reg, flag) => {
                 byte tomov = 0;
                 var retval = false;
@@ -224,7 +253,10 @@ namespace Emu8080
             },
             Arity = 1,
             Cycles = 7,
-            LowCycles = 5
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return $"MOV    {Utils.RegisterFromBinary((byte)((args[0] & 0x3F) >> 3))},{Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
+            }
         };
 
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {

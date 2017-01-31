@@ -47,15 +47,7 @@ namespace Emu8080
             var sb = new StringBuilder();
             sb.Append(Registers.PC.ToString("X4"));
             sb.Append(": ");
-            sb.Append(inst.Text);
-            // special print rules
-            if (inst == InstructionSet.MOV) {
-                sb.Append(Utils.RegisterFromBinary((byte)((args[0] & 0x3F) >> 3)));
-                sb.Append(",");
-                sb.Append(Utils.RegisterFromBinary((byte)(args[0] & 0x7)));
-            } else if (inst == InstructionSet.INR) {
-                sb.Append(Utils.RegisterFromBinary((byte)((args[0] & 0x3F) >> 3)));
-            }
+            sb.Append(inst.GetPrintString(args));
             return sb.ToString();
         }
 
