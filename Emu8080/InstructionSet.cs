@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+// Thank God for http://altairclone.com/downloads/manuals/8080%20Programmers%20Manual.pdf
+
 namespace Emu8080
 {
     public static class InstructionSet {
@@ -274,7 +276,7 @@ namespace Emu8080
                     case 4: oreg = reg.H; break;
                     case 5: oreg = reg.L; break;
                     case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg += reg.A; break;
+                    case 7: oreg = reg.A; break;
                 }
                 var result = reg.A + oreg;
                 flag.Carry = (result > 0xFF);
@@ -309,7 +311,7 @@ namespace Emu8080
                     case 4: oreg = reg.H; break;
                     case 5: oreg = reg.L; break;
                     case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg += reg.A; break;
+                    case 7: oreg = reg.A; break;
                 }
                 var carryamt = flag.Carry ? 1 : 0;
                 var result = reg.A + oreg + carryamt;
@@ -345,7 +347,7 @@ namespace Emu8080
                     case 4: oreg = reg.H; break;
                     case 5: oreg = reg.L; break;
                     case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg += reg.A; break;
+                    case 7: oreg = reg.A; break;
                 }
                 var twocomp = (~oreg + 1) & 0xFF;
                 var result = reg.A + ((~oreg + 1) & 0xFF);
@@ -381,7 +383,7 @@ namespace Emu8080
                     case 4: oreg = reg.H; break;
                     case 5: oreg = reg.L; break;
                     case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg += reg.A; break;
+                    case 7: oreg = reg.A; break;
                 }
                 var carryamt = flag.Carry ? 1 : 0;
                 var twocomp = (~(oreg + carryamt) + 1) & 0xFF;
@@ -400,6 +402,103 @@ namespace Emu8080
             LowCycles = 4,
             GetPrintString = (args) => {
                 return $"SBB    {Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
+            }
+        };
+
+        // ANA - Logical AND Register or Memory With Accumulator
+        // 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7
+        public static Instruction ANA = new Instruction() {
+            Text = "ANA",
+            Execute = (mem, args, reg, flag) => {
+                var oreg = (byte)0;
+                var retval = false;
+                switch (args[0] & 0x7) {
+                    case 0: oreg = reg.B; break;
+                    case 1: oreg = reg.C; break;
+                    case 2: oreg = reg.D; break;
+                    case 3: oreg = reg.E; break;
+                    case 4: oreg = reg.H; break;
+                    case 5: oreg = reg.L; break;
+                    case 6: oreg = mem[reg.HL]; retval = true; break;
+                    case 7: oreg = reg.A; break;
+                }
+                var result = (byte)(reg.A & oreg);
+                flag.Carry = false;
+                flag.Zero = (result == 0);
+                flag.Parity = Utils.ParityTable[result] == 1;
+                flag.Sign = (result >> 7) == 1;
+                return retval;
+            },
+            Arity = 1,
+            Cycles = 7,
+            LowCycles = 4,
+            GetPrintString = (args) => {
+                return $"ANA    {Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
+            }
+        };
+
+        // XRA - Logical XOR Register or Memory With Accumulator
+        // 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF
+        public static Instruction XRA = new Instruction() {
+            Text = "XRA",
+            Execute = (mem, args, reg, flag) => {
+                var oreg = (byte)0;
+                var retval = false;
+                switch (args[0] & 0x7) {
+                    case 0: oreg = reg.B; break;
+                    case 1: oreg = reg.C; break;
+                    case 2: oreg = reg.D; break;
+                    case 3: oreg = reg.E; break;
+                    case 4: oreg = reg.H; break;
+                    case 5: oreg = reg.L; break;
+                    case 6: oreg = mem[reg.HL]; retval = true; break;
+                    case 7: oreg = reg.A; break;
+                }
+                var result = (byte)(reg.A ^ oreg);
+                flag.Carry = false;
+                flag.AuxCarry = false;
+                flag.Zero = (result == 0);
+                flag.Parity = Utils.ParityTable[result] == 1;
+                flag.Sign = (result >> 7) == 1;
+                return retval;
+            },
+            Arity = 1,
+            Cycles = 7,
+            LowCycles = 4,
+            GetPrintString = (args) => {
+                return $"XRA    {Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
+            }
+        };
+
+        // ORA - Logical OR Register or Memory With Accumulator
+        // 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7
+        public static Instruction ORA = new Instruction() {
+            Text = "ORA",
+            Execute = (mem, args, reg, flag) => {
+                var oreg = (byte)0;
+                var retval = false;
+                switch (args[0] & 0x7) {
+                    case 0: oreg = reg.B; break;
+                    case 1: oreg = reg.C; break;
+                    case 2: oreg = reg.D; break;
+                    case 3: oreg = reg.E; break;
+                    case 4: oreg = reg.H; break;
+                    case 5: oreg = reg.L; break;
+                    case 6: oreg = mem[reg.HL]; retval = true; break;
+                    case 7: oreg = reg.A; break;
+                }
+                var result = (byte)(reg.A | oreg);
+                flag.Carry = false;
+                flag.Zero = (result == 0);
+                flag.Parity = Utils.ParityTable[result] == 1;
+                flag.Sign = (result >> 7) == 1;
+                return retval;
+            },
+            Arity = 1,
+            Cycles = 7,
+            LowCycles = 4,
+            GetPrintString = (args) => {
+                return $"ORA    {Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
             }
         };
 
@@ -424,6 +523,9 @@ namespace Emu8080
             { 0x88, ADC  }, { 0x89, ADC  }, { 0x8A, ADC  }, { 0x8B, ADC  }, { 0x8C, ADC  }, { 0x8D, ADC  }, { 0x8E, ADC  }, { 0x8F, ADC  },
             { 0x90, SUB  }, { 0x91, SUB  }, { 0x92, SUB  }, { 0x93, SUB  }, { 0x94, SUB  }, { 0x95, SUB  }, { 0x96, SUB  }, { 0x97, SUB  },
             { 0x98, SBB  }, { 0x99, SBB  }, { 0x9A, SBB  }, { 0x9B, SBB  }, { 0x9C, SBB  }, { 0x9D, SBB  }, { 0x9E, SBB  }, { 0x9F, SBB  },
+            { 0xA0, ANA  }, { 0xA1, ANA  }, { 0xA2, ANA  }, { 0xA3, ANA  }, { 0xA4, ANA  }, { 0xA5, ANA  }, { 0xA6, ANA  }, { 0xA7, ANA  },
+            { 0xA8, XRA  }, { 0xA9, XRA  }, { 0xAA, XRA  }, { 0xAB, XRA  }, { 0xAC, XRA  }, { 0xAD, XRA  }, { 0xAE, XRA  }, { 0xAF, XRA  },
+            { 0xB0, ORA  }, { 0xB1, ORA  }, { 0xB2, ORA  }, { 0xB3, ORA  }, { 0xB4, ORA  }, { 0xB5, ORA  }, { 0xB6, ORA  }, { 0xB7, ORA  },
         };
     }
 }
