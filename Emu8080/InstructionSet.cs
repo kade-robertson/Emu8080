@@ -44,7 +44,7 @@ namespace Emu8080
         // LDAX - Load Accumulator
         // 0x0A, 0x1A
         public static Instruction LDAX = new Instruction() {
-            Text = "STAX  ",
+            Text = "LDAX  ",
             Execute = (mem, args, reg, flag) => {
                 var oreg = 0;
                 switch (args[0] & 0x10) {
@@ -58,7 +58,7 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 var touse = (args[0] & 0x10) == 0x10 ? 'D' : 'B';
-                return $"STAX   {touse}";
+                return $"LDAX   {touse}";
             }
         };
 

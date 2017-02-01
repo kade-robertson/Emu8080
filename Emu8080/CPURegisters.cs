@@ -47,5 +47,14 @@ namespace Emu8080
                 L = (byte)(value & 0xFF);
             }
         }
+
+        public CPURegisters() {
+            BC = 0;
+            DE = 0;
+            HL = 0;
+            A = 0;
+            PC = 0;
+            SP = 0xF000;
+        }
     }
 }

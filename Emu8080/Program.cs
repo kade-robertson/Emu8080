@@ -7,33 +7,6 @@ using System.Text;
 namespace Emu8080 
 {
     class Program {
-        static void Main(string[] args) {
-            /*var rom = File.ReadAllBytes(@"..\..\..\rom\invaders");
-            var cpu = new CPU(rom);
-            while (cpu.Step()) {
-                Console.WriteLine(cpu.CPURegisters.PC);
-            }*/
-            UnderflowTest();
-            OverflowTest();
-            DAATest();
-            MOVTest();
-            Console.Read();
-        }
-
-        static void UnderflowTest() {
-            var program = new byte[] {
-                0x3D // DCR A
-            };
-            var cpu = new CPU(program);
-            var counter = 0;
-            while (counter < program.Length && cpu.Step()) {
-                counter += 1;
-            }
-            Debug.Assert(cpu.Registers.A == 0xFF);
-            Debug.Assert(cpu.Flag.Sign == true);
-            Debug.Assert(cpu.Flag.Parity == true);
-            Console.WriteLine("Underflow test succeeded!");
-        }
 
         static void OverflowTest() {
             var program = new byte[] {
@@ -90,6 +63,28 @@ namespace Emu8080
             Debug.Assert(cpu.Registers.H == 0xFE);
             Debug.Assert(cpu.Memory[cpu.Registers.HL] == 0xBA);
             Console.WriteLine("MOV test succeeded!");
+        }
+
+        static void STAX_LDAXTest() {
+            var program = new byte[] {
+                0x04, // INR  B
+                0x0C, // INR  C
+                0x0A, // LDAX B
+                0x3C, // INR  A
+                0x14, // INR  D
+                0x14, // INR  D
+                0x1C, // INR  E
+                0x12, // STAX D
+            };
+            var cpu = new CPU(program);
+            var counter = 0;
+            while (counter < program.Length && cpu.Step()) {
+                counter += 1;
+            }
+            Debug.Assert(cpu.Registers.A == 0x01);
+            Debug.Assert(cpu.Registers.BC == 0x101);
+            Debug.Assert(cpu.Memory[cpu.Registers.DE] == 0x01);
+            Console.WriteLine("STAX / LDAX test succeeded!");
         }
     }
 }

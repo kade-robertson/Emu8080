@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Emu8080", "Emu8080\Emu8080.csproj", "{96810E32-2517-48BC-B41D-7119379CC5A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test8080", "Test8080\Test8080.csproj", "{DC6DB2E6-87A1-451F-A32A-3D081635A237}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{96810E32-2517-48BC-B41D-7119379CC5A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96810E32-2517-48BC-B41D-7119379CC5A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96810E32-2517-48BC-B41D-7119379CC5A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC6DB2E6-87A1-451F-A32A-3D081635A237}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC6DB2E6-87A1-451F-A32A-3D081635A237}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC6DB2E6-87A1-451F-A32A-3D081635A237}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC6DB2E6-87A1-451F-A32A-3D081635A237}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
