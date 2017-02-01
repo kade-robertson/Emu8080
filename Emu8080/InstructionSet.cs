@@ -294,6 +294,42 @@ namespace Emu8080
             }
         };
 
+        // ADC - Add Register or Memory To Accumulator With Carry
+        // 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F
+        public static Instruction ADC = new Instruction() {
+            Text = "ADC",
+            Execute = (mem, args, reg, flag) => {
+                var retval = false;
+                var oreg = (byte)0;
+                switch (args[0] & 0x7) {
+                    case 0: oreg = reg.B; break;
+                    case 1: oreg = reg.C; break;
+                    case 2: oreg = reg.D; break;
+                    case 3: oreg = reg.E; break;
+                    case 4: oreg = reg.H; break;
+                    case 5: oreg = reg.L; break;
+                    case 6: oreg = mem[reg.HL]; retval = true; break;
+                    case 7: oreg += reg.A; break;
+                }
+                var carryamt = flag.Carry ? 1 : 0;
+                var result = reg.A + oreg + carryamt;
+                flag.Carry = (result > 0xFF);
+                result = (byte)(result & 0xFF);
+                flag.Zero = (result == 0);
+                flag.Sign = (result >> 7) == 1;
+                flag.AuxCarry = ((reg.A & 0xF) + (oreg & 0xF) + carryamt) > 0xF;
+                flag.Parity = Utils.ParityTable[result] == 1;
+                reg.A = (byte)result;
+                return retval;
+            },
+            Arity = 1,
+            Cycles = 7,
+            LowCycles = 4,
+            GetPrintString = (args) => {
+                return $"ADC    {Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
+            }
+        };
+
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
             { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  },
             { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  },
@@ -312,6 +348,7 @@ namespace Emu8080
             { 0x70, MOV  }, { 0x71, MOV  }, { 0x72, MOV  }, { 0x73, MOV  }, { 0x74, MOV  }, { 0x75, MOV  }, { 0x77, MOV  },
             { 0x78, MOV  }, { 0x79, MOV  }, { 0x7A, MOV  }, { 0x7B, MOV  }, { 0x7C, MOV  }, { 0x7D, MOV  }, { 0x7E, MOV  }, { 0x7F, MOV  },
             { 0x80, ADD  }, { 0x81, ADD  }, { 0x82, ADD  }, { 0x83, ADD  }, { 0x84, ADD  }, { 0x85, ADD  }, { 0x86, ADD  }, { 0x87, ADD  },
+            { 0x88, ADC  }, { 0x89, ADC  }, { 0x8A, ADC  }, { 0x8B, ADC  }, { 0x8C, ADC  }, { 0x8D, ADC  }, { 0x8E, ADC  }, { 0x8F, ADC  },
         };
     }
 }

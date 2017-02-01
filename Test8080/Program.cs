@@ -15,6 +15,7 @@ namespace Test8080
             MOVTest();
             STAXLDAXTest();
             ADDTest();
+            ADCTest();
 
             Console.Read();
         }
@@ -115,6 +116,27 @@ namespace Test8080
                     cpu.Registers.A = 0x6C;
                 },
                 goodmsg: "ADD test succeeded!"
+            );
+        }
+
+        static bool ADCTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x89 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x80) { Console.WriteLine("ADD FAIL: A != 0x80"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("ADD FAIL: PARITY != FALSE"); return false; }
+                    if (!cpu.Flag.Sign) { Console.WriteLine("ADD FAIL: SIGN != TRUE"); return false; }
+                    if (!cpu.Flag.AuxCarry) { Console.WriteLine("ADD FAIL: AUXCARRY != TRUE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("ADD FAIL: ZERO != FALSE"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("ADD FAIL: CARRY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.C = 0x3D;
+                    cpu.Registers.A = 0x42;
+                    cpu.Flag.Carry = true;
+                },
+                goodmsg: "ADC test succeeded!"
             );
         }
     }
