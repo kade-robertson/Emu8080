@@ -330,6 +330,79 @@ namespace Emu8080
             }
         };
 
+        // SUB - Subtract Register or Memory To Accumulator
+        // 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97
+        public static Instruction SUB = new Instruction() {
+            Text = "SUB",
+            Execute = (mem, args, reg, flag) => {
+                var retval = false;
+                var oreg = (byte)0;
+                switch (args[0] & 0x7) {
+                    case 0: oreg = reg.B; break;
+                    case 1: oreg = reg.C; break;
+                    case 2: oreg = reg.D; break;
+                    case 3: oreg = reg.E; break;
+                    case 4: oreg = reg.H; break;
+                    case 5: oreg = reg.L; break;
+                    case 6: oreg = mem[reg.HL]; retval = true; break;
+                    case 7: oreg += reg.A; break;
+                }
+                var twocomp = (~oreg + 1) & 0xFF;
+                var result = reg.A + ((~oreg + 1) & 0xFF);
+                flag.Carry = (result <= 0xFF);
+                result = (byte)(result & 0xFF);
+                flag.Zero = (result == 0);
+                flag.Sign = (result >> 7) == 1;
+                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                flag.Parity = Utils.ParityTable[result] == 1;
+                reg.A = (byte)result;
+                return retval;
+            },
+            Arity = 1,
+            Cycles = 7,
+            LowCycles = 4,
+            GetPrintString = (args) => {
+                return $"SUB    {Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
+            }
+        };
+
+        // SBB - Subtract Register or Memory To Accumulator With Carry
+        // 0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F
+        public static Instruction SBB = new Instruction() {
+            Text = "SBB",
+            Execute = (mem, args, reg, flag) => {
+                var retval = false;
+                var oreg = (byte)0;
+                switch (args[0] & 0x7) {
+                    case 0: oreg = reg.B; break;
+                    case 1: oreg = reg.C; break;
+                    case 2: oreg = reg.D; break;
+                    case 3: oreg = reg.E; break;
+                    case 4: oreg = reg.H; break;
+                    case 5: oreg = reg.L; break;
+                    case 6: oreg = mem[reg.HL]; retval = true; break;
+                    case 7: oreg += reg.A; break;
+                }
+                var carryamt = flag.Carry ? 1 : 0;
+                var twocomp = (~(oreg + carryamt) + 1) & 0xFF;
+                var result = reg.A + twocomp;
+                flag.Carry = (result <= 0xFF);
+                result = (byte)(result & 0xFF);
+                flag.Zero = (result == 0);
+                flag.Sign = (result >> 7) == 1;
+                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                flag.Parity = Utils.ParityTable[result] == 1;
+                reg.A = (byte)result;
+                return retval;
+            },
+            Arity = 1,
+            Cycles = 7,
+            LowCycles = 4,
+            GetPrintString = (args) => {
+                return $"SBB    {Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
+            }
+        };
+
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
             { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  },
             { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  },
@@ -349,6 +422,8 @@ namespace Emu8080
             { 0x78, MOV  }, { 0x79, MOV  }, { 0x7A, MOV  }, { 0x7B, MOV  }, { 0x7C, MOV  }, { 0x7D, MOV  }, { 0x7E, MOV  }, { 0x7F, MOV  },
             { 0x80, ADD  }, { 0x81, ADD  }, { 0x82, ADD  }, { 0x83, ADD  }, { 0x84, ADD  }, { 0x85, ADD  }, { 0x86, ADD  }, { 0x87, ADD  },
             { 0x88, ADC  }, { 0x89, ADC  }, { 0x8A, ADC  }, { 0x8B, ADC  }, { 0x8C, ADC  }, { 0x8D, ADC  }, { 0x8E, ADC  }, { 0x8F, ADC  },
+            { 0x90, SUB  }, { 0x91, SUB  }, { 0x92, SUB  }, { 0x93, SUB  }, { 0x94, SUB  }, { 0x95, SUB  }, { 0x96, SUB  }, { 0x97, SUB  },
+            { 0x98, SBB  }, { 0x99, SBB  }, { 0x9A, SBB  }, { 0x9B, SBB  }, { 0x9C, SBB  }, { 0x9D, SBB  }, { 0x9E, SBB  }, { 0x9F, SBB  },
         };
     }
 }

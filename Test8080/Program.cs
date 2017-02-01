@@ -16,6 +16,8 @@ namespace Test8080
             STAXLDAXTest();
             ADDTest();
             ADCTest();
+            SUBTest();
+            SBBTest();
 
             Console.Read();
         }
@@ -123,12 +125,12 @@ namespace Test8080
             return Harness.CheckConditions(
                 program: new byte[] { 0x89 },
                 conditions: (cpu) => {
-                    if (cpu.Registers.A != 0x80) { Console.WriteLine("ADD FAIL: A != 0x80"); return false; }
-                    if (cpu.Flag.Parity) { Console.WriteLine("ADD FAIL: PARITY != FALSE"); return false; }
-                    if (!cpu.Flag.Sign) { Console.WriteLine("ADD FAIL: SIGN != TRUE"); return false; }
-                    if (!cpu.Flag.AuxCarry) { Console.WriteLine("ADD FAIL: AUXCARRY != TRUE"); return false; }
-                    if (cpu.Flag.Zero) { Console.WriteLine("ADD FAIL: ZERO != FALSE"); return false; }
-                    if (cpu.Flag.Carry) { Console.WriteLine("ADD FAIL: CARRY != FALSE"); return false; }
+                    if (cpu.Registers.A != 0x80) { Console.WriteLine("ADC FAIL: A != 0x80"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("ADC FAIL: PARITY != FALSE"    ); return false; }
+                    if (!cpu.Flag.Sign) { Console.WriteLine("ADC FAIL: SIGN != TRUE"); return false; }
+                    if (!cpu.Flag.AuxCarry) { Console.WriteLine("ADC FAIL: AUXCARRY != TRUE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("ADC FAIL: ZERO != FALSE"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("ADC FAIL: CARRY != FALSE"); return false; }
                     return true;
                 },
                 setup: (cpu) => {
@@ -137,6 +139,46 @@ namespace Test8080
                     cpu.Flag.Carry = true;
                 },
                 goodmsg: "ADC test succeeded!"
+            );
+        }
+
+        static bool SUBTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x97 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x00) { Console.WriteLine("SUB FAIL: A != 0x00"); return false; }
+                    if (!cpu.Flag.Parity) { Console.WriteLine("SUB FAIL: PARITY != TRUE"); return false; }
+                    if (cpu.Flag.Sign) { Console.WriteLine("SUB FAIL: SIGN != FALSE"); return false; }
+                    if (!cpu.Flag.AuxCarry) { Console.WriteLine("SUB FAIL: AUXCARRY != TRUE"); return false; }
+                    if (!cpu.Flag.Zero) { Console.WriteLine("SUB FAIL: ZERO != TRUE"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("SUB FAIL: CARRY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x3E;
+                },
+                goodmsg: "SUB test succeeded!"
+            );
+        }
+
+        static bool SBBTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x9D },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x01) { Console.WriteLine("SBB FAIL: A != 0x01"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("SBB FAIL: PARITY != FALSE"); return false; }
+                    if (cpu.Flag.Sign) { Console.WriteLine("SBB FAIL: SIGN != FALSE"); return false; }
+                    if (!cpu.Flag.AuxCarry) { Console.WriteLine("SBB FAIL: AUXCARRY != TRUE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("SBB FAIL: ZERO != FALSE"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("SBB FAIL: CARRY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.L = 0x02;
+                    cpu.Registers.A = 0x04;
+                    cpu.Flag.Carry = true;
+                },
+                goodmsg: "SBB test succeeded!"
             );
         }
     }
