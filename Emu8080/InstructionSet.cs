@@ -229,7 +229,7 @@ namespace Emu8080
             Execute = (mem, args, reg, flag) => {
                 byte tomov = 0;
                 var retval = false;
-                switch ((args[0] & 0x7)) {
+                switch (args[0] & 0x7) {
                     case 0: tomov = reg.B; break;
                     case 1: tomov = reg.C; break;
                     case 2: tomov = reg.D; break;
@@ -259,6 +259,41 @@ namespace Emu8080
             }
         };
 
+        // ADD - Add Register or Memory To Accumulator
+        // 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87
+        public static Instruction ADD = new Instruction() {
+            Text = "ADD",
+            Execute = (mem, args, reg, flag) => {
+                var retval = false;
+                var oreg = (byte)0;
+                switch (args[0] & 0x7) {
+                    case 0: oreg = reg.B; break;
+                    case 1: oreg = reg.C; break;
+                    case 2: oreg = reg.D; break;
+                    case 3: oreg = reg.E; break;
+                    case 4: oreg = reg.H; break;
+                    case 5: oreg = reg.L; break;
+                    case 6: oreg = mem[reg.HL]; retval = true; break;
+                    case 7: oreg += reg.A; break;
+                }
+                var result = reg.A + oreg;
+                flag.Carry = (result > 0xFF);
+                result = (byte)(result & 0xFF);
+                flag.Zero = (result == 0);
+                flag.Sign = (result >> 7) == 1;
+                flag.AuxCarry = ((reg.A & 0xF) + (oreg & 0xF)) > 0xF;
+                flag.Parity = Utils.ParityTable[result] == 1;
+                reg.A = (byte)result;
+                return retval;
+            },
+            Arity = 1,
+            Cycles = 7,
+            LowCycles = 4,
+            GetPrintString = (args) => {
+                return $"ADD    {Utils.RegisterFromBinary((byte)(args[0] & 0x7))}";
+            }
+        };
+
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
             { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  },
             { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  },
@@ -276,6 +311,7 @@ namespace Emu8080
             { 0x68, MOV  }, { 0x69, MOV  }, { 0x6A, MOV  }, { 0x6B, MOV  }, { 0x6C, MOV  }, { 0x6D, MOV  }, { 0x6E, MOV  }, { 0x6F, MOV  },
             { 0x70, MOV  }, { 0x71, MOV  }, { 0x72, MOV  }, { 0x73, MOV  }, { 0x74, MOV  }, { 0x75, MOV  }, { 0x77, MOV  },
             { 0x78, MOV  }, { 0x79, MOV  }, { 0x7A, MOV  }, { 0x7B, MOV  }, { 0x7C, MOV  }, { 0x7D, MOV  }, { 0x7E, MOV  }, { 0x7F, MOV  },
+            { 0x80, ADD  }, { 0x81, ADD  }, { 0x82, ADD  }, { 0x83, ADD  }, { 0x84, ADD  }, { 0x85, ADD  }, { 0x86, ADD  }, { 0x87, ADD  },
         };
     }
 }
