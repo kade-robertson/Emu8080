@@ -98,6 +98,40 @@ namespace Emu8080
             }
         };
 
+        // RAL - Rotate Accumulator Left Through Carry
+        // 0x17
+        public static Instruction RAL = new Instruction() {
+            Text = "RAL",
+            Execute = (mem, args, reg, flag) => {
+                var hob = (reg.A >> 7);
+                reg.A = (byte)(((reg.A << 1) & 0xFF) | (flag.Carry ? 1 : 0));
+                flag.Carry = hob == 1;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return "RAL";
+            }
+        };
+
+        // RAR - Rotate Accumulator Right Through Carry
+        // 0x1F
+        public static Instruction RAR = new Instruction() {
+            Text = "RAR",
+            Execute = (mem, args, reg, flag) => {
+                var lob = (reg.A & 0x1);
+                reg.A = (byte)((reg.A >> 1) | (flag.Carry ? 0x80 : 0));
+                flag.Carry = lob == 1;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return "RAR";
+            }
+        };
+
         // DAA - Decimal Adjust Accumulator
         // 0x27
         public static Instruction DAA = new Instruction() {
@@ -576,8 +610,8 @@ namespace Emu8080
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
             { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  }, {0x07, RLC  },
             { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
-            { 0x12, STAX }, { 0x14, INR  }, { 0x15, DCR  },
-            { 0x1A, LDAX }, { 0x1C, INR  }, { 0x1D, DCR  },
+            { 0x12, STAX }, { 0x14, INR  }, { 0x15, DCR  }, { 0x17, RAL  },
+            { 0x1A, LDAX }, { 0x1C, INR  }, { 0x1D, DCR  }, { 0x1F, RAR  },
             { 0x24, INR  }, { 0x25, DCR  }, { 0x27, DAA  },
             { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },
             { 0x34, INR  }, { 0x35, DCR  }, { 0x37, STC  },

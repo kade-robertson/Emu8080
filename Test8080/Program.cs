@@ -23,6 +23,7 @@ namespace Test8080
             ORATest();
             CMPTest();
             RLCRRCTest();
+            RALRARTest();
 
             Console.Read();
         }
@@ -269,7 +270,24 @@ namespace Test8080
                 setup: (cpu) => {
                     cpu.Registers.A = 0x72;
                     cpu.Registers.B = 0x14;
-                }    
+                },
+                goodmsg: "RLC / RRC test succeeded!"    
+            );
+        }
+
+        static bool RALRARTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x17, 0x78, 0x1F },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xB5) { Console.WriteLine("RLC/RRC FAIL: A != 0xB5"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("RLC/RRC FAIL: CARRY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0xB5;
+                    cpu.Registers.B = 0x6A;
+                },
+                goodmsg: "RAL / RAR test succeeded!"
             );
         }
     }
