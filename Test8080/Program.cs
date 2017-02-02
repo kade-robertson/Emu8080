@@ -40,6 +40,7 @@ namespace Test8080
             // Register Pair Instructions
             PUSHTest();
             POPTest();
+            DADTest();
 
             Console.Read();
         }
@@ -387,6 +388,22 @@ namespace Test8080
                     cpu.Memory[0x2C01] = 0xFF;
                 },
                 goodmsg: "POP test succeeded!"
+            );
+        }
+
+        static bool DADTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x09 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.HL != 0xD51A) { Console.WriteLine("DAD FAIL: HL != 0xD51A"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("DAD FAIL: CARRY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.BC = 0x339F;
+                    cpu.Registers.HL = 0xA17B;
+                },
+                goodmsg: "DAD test succeeded!"    
             );
         }
     }

@@ -41,12 +41,12 @@ namespace Emu8080
             return "?";
         }
 
-        public static string RegisterPairFromBinary(byte b) {
+        public static string RegisterPairFromBinary(byte b, string lastop = "PSW") {
             switch (b) {
                 case 0: return "B";
                 case 1: return "D";
                 case 2: return "H";
-                case 3: return "PSW";
+                case 3: return lastop;
             }
             return "?";
         }

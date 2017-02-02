@@ -25,7 +25,7 @@ namespace Emu8080
         // STAX - Store Accumulator
         // 0x02, 0x12
         public static Instruction STAX = new Instruction() {
-            Text = "STAX  ",
+            Text = "STAX",
             Execute = (mem, args, reg, flag) => {
                 var oreg = 0;
                 switch (args[0] & 0x10) {
@@ -39,7 +39,7 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 var touse = (args[0] & 0x10) == 0x10 ? 'D' : 'B';
-                return $"LDAX   {touse}";
+                return $"STAX   {touse}";
             }
         };
 
@@ -60,10 +60,35 @@ namespace Emu8080
             }
         };
 
+        // DAD - Double Add
+        // 0x09, 0x19, 0x29, 0x39
+        public static Instruction DAD = new Instruction() {
+            Text = "DAD",
+            Execute = (mem, args, reg, flag) => {
+                var result = (int)reg.HL;
+                var oreg = (ushort)0;
+                switch ((args[0] >> 4) & 0xF) {
+                    case 0: oreg = reg.BC; break;
+                    case 1: oreg = reg.DE; break;
+                    case 2: oreg = reg.HL; break;
+                    case 3: oreg = reg.SP; break;
+                }
+                result = reg.HL + oreg;
+                flag.Carry = (result > 0xFFFF);
+                reg.HL = (ushort)(result & 0xFFFF);
+                return true;
+            },
+            Arity = 1,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"DAD    {Utils.RegisterPairFromBinary((byte)((args[0] >> 4) & 0xF), "SP")}";
+            }
+        };
+
         // LDAX - Load Accumulator
         // 0x0A, 0x1A
         public static Instruction LDAX = new Instruction() {
-            Text = "LDAX  ",
+            Text = "LDAX",
             Execute = (mem, args, reg, flag) => {
                 var oreg = 0;
                 switch (args[0] & 0x10) {
@@ -676,13 +701,13 @@ namespace Emu8080
 
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
             { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  }, {0x07, RLC  },
-            { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
+            { 0x09, DAD  }, { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
             { 0x12, STAX }, { 0x14, INR  }, { 0x15, DCR  }, { 0x17, RAL  },
-            { 0x1A, LDAX }, { 0x1C, INR  }, { 0x1D, DCR  }, { 0x1F, RAR  },
+            { 0x19, DAD  }, { 0x1A, LDAX }, { 0x1C, INR  }, { 0x1D, DCR  }, { 0x1F, RAR  },
             { 0x24, INR  }, { 0x25, DCR  }, { 0x27, DAA  },
-            { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },
+            { 0x29, DAD  }, { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },
             { 0x34, INR  }, { 0x35, DCR  }, { 0x37, STC  },
-            { 0x3C, INR  }, { 0x3D, DCR  }, { 0x3F, CMC  },
+            { 0x39, DAD  }, { 0x3C, INR  }, { 0x3D, DCR  }, { 0x3F, CMC  },
             { 0x40, MOV  }, { 0x41, MOV  }, { 0x42, MOV  }, { 0x43, MOV  }, { 0x44, MOV  }, { 0x45, MOV  }, { 0x46, MOV  }, { 0x47, MOV  },
             { 0x48, MOV  }, { 0x49, MOV  }, { 0x4A, MOV  }, { 0x4B, MOV  }, { 0x4C, MOV  }, { 0x4D, MOV  }, { 0x4E, MOV  }, { 0x4F, MOV  },
             { 0x50, MOV  }, { 0x51, MOV  }, { 0x52, MOV  }, { 0x53, MOV  }, { 0x54, MOV  }, { 0x55, MOV  }, { 0x56, MOV  }, { 0x57, MOV  },
