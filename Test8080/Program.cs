@@ -18,6 +18,10 @@ namespace Test8080
             ADCTest();
             SUBTest();
             SBBTest();
+            ANATest();
+            XRATest();
+            ORATest();
+            CMPTest();
 
             Console.Read();
         }
@@ -179,6 +183,77 @@ namespace Test8080
                     cpu.Flag.Carry = true;
                 },
                 goodmsg: "SBB test succeeded!"
+            );
+        }
+
+        static bool ANATest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xA1 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x0C) { Console.WriteLine("ANA FAIL: A != 0x0C"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("ANA FAIL: CARRY != FALSE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("ANA FAIL: ZERO != FALSE"); return false; }
+                    if (!cpu.Flag.Parity) { Console.WriteLine("ANA FAIL: PARITY != TRUE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0xFC;
+                    cpu.Registers.C = 0x0F;
+                },
+                goodmsg: "ANA test succeeded!"
+            );
+        }
+
+        static bool XRATest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xA8 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xD3) { }
+                    if (cpu.Flag.Carry) { Console.WriteLine("XRA FAIL: A != 0xD3"); return false; }
+                    if (cpu.Flag.AuxCarry) { Console.WriteLine("XRA FAIL: AUXCARRY != FALSE"); return false; }
+                    if (!cpu.Flag.Sign) { Console.WriteLine("XRA FAIL: SIGN != TRUE"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("XRA FAIL: PARITY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0xFF;
+                    cpu.Registers.B = 0x2C;
+                },
+                goodmsg: "XRA test succeeded!"
+            );
+        }
+
+        static bool ORATest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xB1 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x3F) { Console.WriteLine("ORA FAIL: A != 0x3F"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("ORA FAIL: CARRY != FALSE"); return false; }
+                    if (cpu.Flag.Sign) { Console.WriteLine("ORA FAIL: SIGN != FALSE"); return false; }
+                    if (!cpu.Flag.Parity) { Console.WriteLine("ORA FAIL: PARITY != TRUE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x33;
+                    cpu.Registers.C = 0x0F;
+                },
+                goodmsg: "ORA test succeeded!"
+            );
+        }
+
+        static bool CMPTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xBB },
+                conditions: (cpu) => {
+                    if (!cpu.Flag.Carry) { Console.WriteLine("CMP FAIL: CARRY != TRUE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("CMP FAIL: ZERO != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x02;
+                    cpu.Registers.E = 0x05;
+                },
+                goodmsg: "CMP test succeeded!"
             );
         }
     }
