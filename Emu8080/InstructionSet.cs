@@ -43,6 +43,23 @@ namespace Emu8080
             }
         };
 
+        // RLC - Rotate Accumulator Left
+        // 0x07
+        public static Instruction RLC = new Instruction() {
+            Text = "RLC",
+            Execute = (mem, args, reg, flag) => {
+                var hob = (reg.A >> 7);
+                flag.Carry = hob == 1;
+                reg.A = (byte)(((reg.A << 1) & 0xFF) | hob);
+                return true;
+            },
+            Arity = 1,
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return "RLC";
+            }
+        };
+
         // LDAX - Load Accumulator
         // 0x0A, 0x1A
         public static Instruction LDAX = new Instruction() {
@@ -61,6 +78,23 @@ namespace Emu8080
             GetPrintString = (args) => {
                 var touse = (args[0] & 0x10) == 0x10 ? 'D' : 'B';
                 return $"LDAX   {touse}";
+            }
+        };
+
+        // RRC - Rotate Accumulator Right
+        // 0x0F
+        public static Instruction RRC = new Instruction() {
+            Text = "RRC",
+            Execute = (mem, args, reg, flag) => {
+                var lob = (reg.A & 0x1);
+                flag.Carry = lob == 1;
+                reg.A = (byte)((reg.A >> 1) | (lob << 7));
+                return true;
+            },
+            Arity = 1,
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return "RRC";
             }
         };
 
@@ -505,7 +539,7 @@ namespace Emu8080
             }
         };
 
-        // CMP - Logical OR Register or Memory With Accumulator
+        // CMP - Compare Register or Memory With Accumulator
         // 0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF
         public static Instruction CMP = new Instruction() {
             Text = "CMP",
@@ -540,9 +574,9 @@ namespace Emu8080
         };
 
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
-            { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  },
-            { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  },
-            { 0x12, STAX }, { 0x14, INR  }, { 0x15, DCR },
+            { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  }, {0x07, RLC  },
+            { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
+            { 0x12, STAX }, { 0x14, INR  }, { 0x15, DCR  },
             { 0x1A, LDAX }, { 0x1C, INR  }, { 0x1D, DCR  },
             { 0x24, INR  }, { 0x25, DCR  }, { 0x27, DAA  },
             { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },

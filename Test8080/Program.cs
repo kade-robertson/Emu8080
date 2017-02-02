@@ -22,6 +22,7 @@ namespace Test8080
             XRATest();
             ORATest();
             CMPTest();
+            RLCRRCTest();
 
             Console.Read();
         }
@@ -254,6 +255,21 @@ namespace Test8080
                     cpu.Registers.E = 0x05;
                 },
                 goodmsg: "CMP test succeeded!"
+            );
+        }
+
+        static bool RLCRRCTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x07, 0x80, 0x0F },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x7C) { Console.WriteLine("RLC/RRC FAIL: A != 0x7C"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("RLC/RRC FAIL: CARRY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x72;
+                    cpu.Registers.B = 0x14;
+                }    
             );
         }
     }
