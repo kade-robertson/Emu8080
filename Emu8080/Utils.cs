@@ -40,5 +40,15 @@ namespace Emu8080
             }
             return "?";
         }
+
+        public static string RegisterPairFromBinary(byte b) {
+            switch (b) {
+                case 0: return "B";
+                case 1: return "D";
+                case 2: return "H";
+                case 3: return "PSW";
+            }
+            return "?";
+        }
     }
 }

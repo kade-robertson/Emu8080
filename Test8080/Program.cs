@@ -9,11 +9,21 @@ namespace Test8080
     {
         static void Main(string[] args) 
         {
+            // Carry Bit Instructions
+            CMCTest();
+            STCTest();
+
+            // Single Register Instructions
             DCRTest();
             INRTest();
+            CMATest();
             DAATest();
+
+            // Data Transfer Instructions
             MOVTest();
             STAXLDAXTest();
+
+            // Register or Memory to Accumulator Instructions
             ADDTest();
             ADCTest();
             SUBTest();
@@ -22,10 +32,41 @@ namespace Test8080
             XRATest();
             ORATest();
             CMPTest();
+
+            // Rotate Accumulator Instructions
             RLCRRCTest();
             RALRARTest();
 
+            // Register Pair Instructions
+            PUSHTest();
+            POPTest();
+
             Console.Read();
+        }
+
+        static bool CMCTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x3F },
+                conditions: (cpu) => {
+                    if (cpu.Flag.Carry) { Console.WriteLine("CMC FAIL: CARRY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Carry = true;
+                },
+                goodmsg: "CMC test succeeded!"
+            );
+        }
+
+        static bool STCTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x37 },
+                conditions: (cpu) => {
+                    if (!cpu.Flag.Carry) { Console.WriteLine("STC FAIL: CARRY != TRUE"); return false; }
+                    return true;
+                },
+                goodmsg: "STC test succeeded!"
+            );
         }
 
         static bool DCRTest() {
@@ -55,6 +96,20 @@ namespace Test8080
                     cpu.Registers.A = 0xFF;
                 },
                 goodmsg: "INR test succeeded!"
+            );
+        }
+
+        static bool CMATest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x2F },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xAE) { Console.WriteLine("CMA FAIL: A != 0xAE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x51;
+                },
+                goodmsg: "CMA test succeeded!"   
             );
         }
 
@@ -288,6 +343,50 @@ namespace Test8080
                     cpu.Registers.B = 0x6A;
                 },
                 goodmsg: "RAL / RAR test succeeded!"
+            );
+        }
+
+        static bool PUSHTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xF5 },
+                conditions: (cpu) => {
+                    if (cpu.Memory[0x5029] != 0x1F) { Console.WriteLine("PUSH FAIL: $5029 != 0x1F"); return false; }
+                    if (cpu.Memory[0x5028] != 0x47) { Console.WriteLine("PUSH FAIL: $5028 != 0x1F"); return false; }
+                    if (cpu.Registers.SP != 0x5028) { Console.WriteLine("PUSH FAIL: SP != 0x5028"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x1F;
+                    cpu.Flag.Carry = true;
+                    cpu.Flag.Parity = true;
+                    cpu.Flag.Zero = true;
+                    cpu.Flag.AuxCarry = false;
+                    cpu.Flag.Sign = false;
+                    cpu.Registers.SP = 0x502A;
+                },
+                goodmsg: "PUSH test succeeded!"    
+            );
+        }
+
+        static bool POPTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xF1 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xFF) { Console.WriteLine("POP FAIL: A != 0xFF"); return false; }
+                    if (cpu.Registers.SP != 0x2C02) { Console.WriteLine("POP FAIL: SP != 0x2C02"); return false; }
+                    if (!cpu.Flag.Sign) { Console.WriteLine("POP FAIL: SIGN != TRUE"); return false; }
+                    if (!cpu.Flag.Zero) { Console.WriteLine("POP FAIL: ZERO != TRUE"); return false; }
+                    if (cpu.Flag.AuxCarry) { Console.WriteLine("POP FAIL: AUXCARRY != FALSE"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("POP FAIL: PARITY != FALSE"); return false; }
+                    if (!cpu.Flag.Carry) { Console.WriteLine("POP FAIL: CARRY != TRUE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.SP = 0x2C00;
+                    cpu.Memory[0x2C00] = 0xC3;
+                    cpu.Memory[0x2C01] = 0xFF;
+                },
+                goodmsg: "POP test succeeded!"
             );
         }
     }

@@ -168,6 +168,7 @@ namespace Emu8080
             Text = "CMA",
             Execute = (mem, args, reg, flag) => {
                 var result = (byte)(~reg.A & 0xFF);
+                reg.A = result;
                 return true;
             },
             Arity = 1,
@@ -607,6 +608,72 @@ namespace Emu8080
             }
         };
 
+        // PUSH - Push Data Onto Stack
+        // 0xC5, 0xD5, 0xE5, 0xF5
+        public static Instruction PUSH = new Instruction() {
+            Text = "PUSH",
+            Execute = (mem, args, reg, flag) => {
+                switch (((args[0] & 0x3F) >> 4)) {
+                    case 0:
+                        mem[reg.SP - 1] = reg.B;
+                        mem[reg.SP - 2] = reg.C;
+                        break;
+                    case 1:
+                        mem[reg.SP - 1] = reg.D;
+                        mem[reg.SP - 2] = reg.E;
+                        break;
+                    case 2:
+                        mem[reg.SP - 1] = reg.H;
+                        mem[reg.SP - 2] = reg.L;
+                        break;
+                    case 3:
+                        mem[reg.SP - 1] = reg.A;
+                        mem[reg.SP - 2] = flag.FlagByte;
+                        break;
+                }
+                reg.SP -= 2;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 11,
+            GetPrintString = (args) => {
+                return $"PUSH   {Utils.RegisterPairFromBinary((byte)((args[0] & 0x3F) >> 4))}";
+            }
+        };
+
+        // POP - Pop Data Off Stack
+        // 0xC1, 0xD1, 0xE1, 0xF1
+        public static Instruction POP = new Instruction() {
+            Text = "POP",
+            Execute = (mem, args, reg, flag) => {
+                switch (((args[0] & 0x3F) >> 4)) {
+                    case 0:
+                        reg.B = mem[reg.SP + 1];
+                        reg.C = mem[reg.SP];
+                        break;
+                    case 1:
+                        reg.D = mem[reg.SP + 1];
+                        reg.E = mem[reg.SP];
+                        break;
+                    case 2:
+                        reg.H = mem[reg.SP + 1];
+                        reg.L = mem[reg.SP];
+                        break;
+                    case 3:
+                        reg.A = mem[reg.SP + 1];
+                        flag.FlagByte = mem[reg.SP];
+                        break;
+                }
+                reg.SP += 2;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"POP    {Utils.RegisterPairFromBinary((byte)((args[0] & 0x3F) >> 4))}";
+            }
+        };
+
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
             { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  }, {0x07, RLC  },
             { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
@@ -632,6 +699,10 @@ namespace Emu8080
             { 0xA8, XRA  }, { 0xA9, XRA  }, { 0xAA, XRA  }, { 0xAB, XRA  }, { 0xAC, XRA  }, { 0xAD, XRA  }, { 0xAE, XRA  }, { 0xAF, XRA  },
             { 0xB0, ORA  }, { 0xB1, ORA  }, { 0xB2, ORA  }, { 0xB3, ORA  }, { 0xB4, ORA  }, { 0xB5, ORA  }, { 0xB6, ORA  }, { 0xB7, ORA  },
             { 0xB8, CMP  }, { 0xB9, CMP  }, { 0xBA, CMP  }, { 0xBB, CMP  }, { 0xBC, CMP  }, { 0xBD, CMP  }, { 0xBE, CMP  }, { 0xBF, CMP  },
+            { 0xC1, POP  }, { 0xC5, PUSH },
+            { 0xD1, POP  }, { 0xD5, PUSH },
+            { 0xE1, POP  }, { 0xE5, PUSH },
+            { 0xF1, POP  }, { 0xF5, PUSH },
         };
     }
 }
