@@ -23,7 +23,7 @@ namespace Emu8080
             get {
                 return (ushort)((B << 8) | C);
             } set {
-                B = (byte)(value >> 8);
+                B = (byte)((value >> 8) & 0xFF);
                 C = (byte)(value & 0xFF);
             }
         }
@@ -33,7 +33,7 @@ namespace Emu8080
                 return (ushort)((D << 8) | E);
             }
             set {
-                D = (byte)(value >> 8);
+                D = (byte)((value >> 8) & 0xFF);
                 E = (byte)(value & 0xFF);
             }
         }
@@ -43,7 +43,7 @@ namespace Emu8080
                 return (ushort)((H << 8) | L);
             }
             set {
-                H = (byte)(value >> 8);
+                H = (byte)((value >> 8) & 0xFF);
                 L = (byte)(value & 0xFF);
             }
         }

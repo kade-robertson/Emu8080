@@ -43,6 +43,25 @@ namespace Emu8080
             }
         };
 
+        // INX - Increment Register Pair
+        // 0x03, 0x13, 0x23, 0x33
+        public static Instruction INX = new Instruction() {
+            Text = "INX",
+            Execute = (mem, args, reg, flag) => {
+                switch ((args[0] >> 4) & 0xF) {
+                    case 0: reg.BC++; break;
+                    case 1: reg.DE++; break;
+                    case 2: reg.HL++; break;
+                    case 3: reg.SP = (ushort)((reg.SP + 1) & 0xFFFF); break;
+                }
+                return true;
+            },
+            Cycles = 5,
+            GetPrintString = (args) => {
+                return $"INX    {Utils.RegisterPairFromBinary((byte)((args[0] >> 4) & 0xF), "SP")}";
+            }
+        };
+
         // RLC - Rotate Accumulator Left
         // 0x07
         public static Instruction RLC = new Instruction() {
@@ -103,6 +122,25 @@ namespace Emu8080
             GetPrintString = (args) => {
                 var touse = (args[0] & 0x10) == 0x10 ? 'D' : 'B';
                 return $"LDAX   {touse}";
+            }
+        };
+
+        // DCX - Increment Register Pair
+        // 0x0B, 0x1B, 0x2B, 0x3B
+        public static Instruction DCX = new Instruction() {
+            Text = "DCX",
+            Execute = (mem, args, reg, flag) => {
+                switch ((args[0] >> 4) & 0xF) {
+                    case 0: reg.BC--; break;
+                    case 1: reg.DE--; break;
+                    case 2: reg.HL--; break;
+                    case 3: reg.SP = (ushort)((reg.SP - 1) & 0xFFFF); break;
+                }
+                return true;
+            },
+            Cycles = 5,
+            GetPrintString = (args) => {
+                return $"DCX    {Utils.RegisterPairFromBinary((byte)((args[0] >> 4) & 0xF), "SP")}";
             }
         };
 
@@ -700,14 +738,14 @@ namespace Emu8080
         };
 
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
-            { 0x00, NOP  }, { 0x02, STAX }, { 0x04, INR  }, { 0x05, DCR  }, {0x07, RLC  },
-            { 0x09, DAD  }, { 0x0A, LDAX }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
-            { 0x12, STAX }, { 0x14, INR  }, { 0x15, DCR  }, { 0x17, RAL  },
-            { 0x19, DAD  }, { 0x1A, LDAX }, { 0x1C, INR  }, { 0x1D, DCR  }, { 0x1F, RAR  },
-            { 0x24, INR  }, { 0x25, DCR  }, { 0x27, DAA  },
-            { 0x29, DAD  }, { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },
-            { 0x34, INR  }, { 0x35, DCR  }, { 0x37, STC  },
-            { 0x39, DAD  }, { 0x3C, INR  }, { 0x3D, DCR  }, { 0x3F, CMC  },
+            { 0x00, NOP  }, { 0x02, STAX }, { 0x03, INX  }, { 0x04, INR  }, { 0x05, DCR  }, { 0x07, RLC  },
+            { 0x09, DAD  }, { 0x0A, LDAX }, { 0x0B, DCX  }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
+            { 0x12, STAX }, { 0x13, INX  }, { 0x14, INR  }, { 0x15, DCR  }, { 0x17, RAL  },
+            { 0x19, DAD  }, { 0x1A, LDAX }, { 0x1B, DCX  }, { 0x1C, INR  }, { 0x1D, DCR  }, { 0x1F, RAR  },
+            { 0x23, INX  }, { 0x24, INR  }, { 0x25, DCR  }, { 0x27, DAA  },
+            { 0x29, DAD  }, { 0x2B, DCX  }, { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },
+            { 0x33, INX  }, { 0x34, INR  }, { 0x35, DCR  }, { 0x37, STC  },
+            { 0x39, DAD  }, { 0x3B, DCX  }, { 0x3C, INR  }, { 0x3D, DCR  }, { 0x3F, CMC  },
             { 0x40, MOV  }, { 0x41, MOV  }, { 0x42, MOV  }, { 0x43, MOV  }, { 0x44, MOV  }, { 0x45, MOV  }, { 0x46, MOV  }, { 0x47, MOV  },
             { 0x48, MOV  }, { 0x49, MOV  }, { 0x4A, MOV  }, { 0x4B, MOV  }, { 0x4C, MOV  }, { 0x4D, MOV  }, { 0x4E, MOV  }, { 0x4F, MOV  },
             { 0x50, MOV  }, { 0x51, MOV  }, { 0x52, MOV  }, { 0x53, MOV  }, { 0x54, MOV  }, { 0x55, MOV  }, { 0x56, MOV  }, { 0x57, MOV  },

@@ -41,6 +41,9 @@ namespace Test8080
             PUSHTest();
             POPTest();
             DADTest();
+            INXTest();
+            DCXTest();
+
 
             Console.Read();
         }
@@ -404,6 +407,36 @@ namespace Test8080
                     cpu.Registers.HL = 0xA17B;
                 },
                 goodmsg: "DAD test succeeded!"    
+            );
+        }
+
+        static bool INXTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x13, 0x33 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.DE != 0x3900) { Console.WriteLine("INX FAIL: DE != 0x3900"); return false; }
+                    if (cpu.Registers.SP != 0x0000) { Console.WriteLine("INX FAIL: SP != 0x0000"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.DE = 0x38FF;
+                    cpu.Registers.SP = 0xFFFF;
+                },
+                goodmsg: "INX test succeeded!"
+            );
+        }
+
+        static bool DCXTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x2B },
+                conditions: (cpu) => {
+                    if (cpu.Registers.HL != 0x97FF) { Console.WriteLine("DCX FAIL: DE != 0x97FF"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.HL = 0x9800;
+                },
+                goodmsg: "DCX test succeeded!"
             );
         }
     }
