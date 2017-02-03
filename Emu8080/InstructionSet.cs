@@ -845,6 +845,27 @@ namespace Emu8080
             }
         };
 
+        // ANI - And Immediate With Accumulator
+        // 0xE6
+        public static Instruction ANI = new Instruction() {
+            Text = "ANI",
+            Execute = (mem, args, reg, flag) => {
+                var result = (byte)(reg.A & args[1]);
+                flag.Carry = false;
+                flag.AuxCarry = ((reg.A | args[1]) & 0x08) != 0;
+                flag.Parity = Utils.ParityTable[result] == 1;
+                flag.Sign = (result >> 7) == 1;
+                flag.Zero = (result == 0);
+                reg.A = result;
+                return true;
+            },
+            Arity = 2,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return $"ANI    #${args[1].ToString("X2")}";
+            }
+        };
+
         // XCHG - Exchange Registers
         // 0xEB
         public static Instruction XCHG = new Instruction() {
@@ -862,6 +883,48 @@ namespace Emu8080
             }
         };
 
+        // XRI - Xor Immediate With Accumulator
+        // 0xEE
+        public static Instruction XRI = new Instruction() {
+            Text = "XRI",
+            Execute = (mem, args, reg, flag) => {
+                var result = (byte)(reg.A ^ args[1]);
+                flag.Carry = false;
+                flag.AuxCarry = ((reg.A | args[1]) & 0x08) != 0;
+                flag.Parity = Utils.ParityTable[result] == 1;
+                flag.Sign = (result >> 7) == 1;
+                flag.Zero = (result == 0);
+                reg.A = result;
+                return true;
+            },
+            Arity = 2,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return $"XRI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // ORI - Or Immediate With Accumulator
+        // 0xF6
+        public static Instruction ORI = new Instruction() {
+            Text = "ORI",
+            Execute = (mem, args, reg, flag) => {
+                var result = (byte)(reg.A | args[1]);
+                flag.Carry = false;
+                flag.AuxCarry = (result & 0x08) != 0;
+                flag.Parity = Utils.ParityTable[result] == 1;
+                flag.Sign = (result >> 7) == 1;
+                flag.Zero = (result == 0);
+                reg.A = result;
+                return true;
+            },
+            Arity = 2,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return $"ORI    #${args[1].ToString("X2")}";
+            }
+        };
+
         // SPHL - Load SP From H And L
         // 0xF9
         public static Instruction SPHL = new Instruction() {
@@ -874,6 +937,27 @@ namespace Emu8080
             Cycles = 5,
             GetPrintString = (args) => {
                 return "SPHL";
+            }
+        };
+
+        // CPI - Compare Immediate With Accumulator
+        // 0xFE
+        public static Instruction CPI = new Instruction() {
+            Text = "CPI",
+            Execute = (mem, args, reg, flag) => {
+                var twocomp = (byte)((~args[1] + 1) & 0xFF);
+                var result = reg.A + twocomp;
+                flag.Carry = !(result > 0xFF);
+                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                flag.Sign = ((result & 0xFF) >> 7) == 1;
+                flag.Zero = (result == 0);
+                return true;
+            },
+            Arity = 2,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return $"CPI    #${args[1].ToString("X2")}";
             }
         };
 
@@ -906,9 +990,10 @@ namespace Emu8080
             { 0xCE, ACI  },
             { 0xD1, POP  }, { 0xD5, PUSH }, { 0xD6, SUI  },
             { 0xDE, SBI  },
-            { 0xE1, POP  }, { 0xE3, XTHL }, { 0xE5, PUSH },
-            { 0xEB, XCHG },
-            { 0xF1, POP  }, { 0xF5, PUSH }, { 0xF9, SPHL },
+            { 0xE1, POP  }, { 0xE3, XTHL }, { 0xE5, PUSH }, { 0xE6, ANI  },
+            { 0xEB, XCHG }, { 0xEE, XRI  },
+            { 0xF1, POP  }, { 0xF5, PUSH }, { 0xF6, ORI  },
+            { 0xF9, SPHL }, { 0xFE, CPI  },
         };
     }
 }

@@ -52,6 +52,10 @@ namespace Test8080
             ACITest();
             SUITest();
             SBITest();
+            ANITest();
+            XRITest();
+            ORITest();
+            CPITest();
 
             Console.Read();
         }
@@ -571,6 +575,76 @@ namespace Test8080
                     cpu.Flag.Carry = true;
                 },
                 goodmsg: "SBI test succeeded!"
+            );
+        }
+
+        static bool ANITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x79, 0xE6, 0x0F },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x0A) { Console.WriteLine("ANI FAIL: A != 0x0A"); return false; }
+                    if (!cpu.Flag.Parity) { Console.WriteLine("ANI FAIL: PARITY != TRUE"); return false; }
+                    if (cpu.Flag.Sign) { Console.WriteLine("ANI FAIL: SIGN != FALSE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("ANI FAIL: ZERO != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.C = 0x3A;
+                },
+                goodmsg: "ANI test succeeded!"
+            );
+        }
+
+        static bool XRITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xEE, 0x81 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xBA) { Console.WriteLine("XRI FAIL: A != 0xBA"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("XRI FAIL: PARITY != FALSE"); return false; }
+                    if (!cpu.Flag.Sign) { Console.WriteLine("XRI FAIL: SIGN != TRUE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("XRI FAIL: ZERO != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x3B;
+                },
+                goodmsg: "XRI test succeeded!"
+            );
+        }
+
+        static bool ORITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x79, 0xF6, 0x0F },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xBF) { Console.WriteLine("ORI FAIL: A != 0xBF"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("ORI FAIL: PARITY != FALSE"); return false; }
+                    if (!cpu.Flag.Sign) { Console.WriteLine("ORI FAIL: SIGN != TRUE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("ORI FAIL: ZERO != FALSE"); return false; }
+                    return true;
+                }, 
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x3B;
+                    cpu.Registers.C = 0xB5;
+                },
+                goodmsg: "ORI test succeeded!"
+            );
+        }
+
+        static bool CPITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xFE, 0x40 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x4A) { Console.WriteLine("CPI FAIL: A != 0x4A"); return false; }
+                    if (!cpu.Flag.Parity) { Console.WriteLine("CPI FAIL: PARITY != TRUE"); return false; }
+                    if (cpu.Flag.Sign) { Console.WriteLine("CPI FAIL: SIGN != FALSE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("CPI FAIL: ZERO != FALSE"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("CPI FAIL: CARRY != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x4A;
+                },
+                goodmsg: "CPI test succeeded!"
             );
         }
     }
