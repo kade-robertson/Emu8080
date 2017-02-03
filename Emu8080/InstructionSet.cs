@@ -737,6 +737,58 @@ namespace Emu8080
             }
         };
 
+        // XTHL - Exchange Stack
+        // 0xE3
+        public static Instruction XTHL = new Instruction() {
+            Text = "XTHL",
+            Execute = (mem, args, reg, flag) => {
+                byte temp1 = mem[reg.SP];
+                byte temp2 = mem[reg.SP + 1];
+                mem[reg.SP] = reg.L;
+                mem[reg.SP + 1] = reg.H;
+                reg.L = temp1;
+                reg.H = temp2;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 5,
+            GetPrintString = (args) => {
+                return "XTHL";
+            }
+        };
+
+        // XCHG - Exchange Registers
+        // 0xEB
+        public static Instruction XCHG = new Instruction() {
+            Text = "XCHG",
+            Execute = (mem, args, reg, flag) => {
+                ushort temp = reg.HL;
+                reg.HL = reg.DE;
+                reg.DE = temp;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 5,
+            GetPrintString = (args) => {
+                return "XCHG";
+            }
+        };
+
+        // SPHL - Load SP From H And L
+        // 0xF9
+        public static Instruction SPHL = new Instruction() {
+            Text = "SPHL",
+            Execute = (mem, args, reg, flag) => {
+                reg.SP = reg.HL;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 5,
+            GetPrintString = (args) => {
+                return "SPHL";
+            }
+        };
+
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
             { 0x00, NOP  }, { 0x02, STAX }, { 0x03, INX  }, { 0x04, INR  }, { 0x05, DCR  }, { 0x07, RLC  },
             { 0x09, DAD  }, { 0x0A, LDAX }, { 0x0B, DCX  }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
@@ -764,8 +816,9 @@ namespace Emu8080
             { 0xB8, CMP  }, { 0xB9, CMP  }, { 0xBA, CMP  }, { 0xBB, CMP  }, { 0xBC, CMP  }, { 0xBD, CMP  }, { 0xBE, CMP  }, { 0xBF, CMP  },
             { 0xC1, POP  }, { 0xC5, PUSH },
             { 0xD1, POP  }, { 0xD5, PUSH },
-            { 0xE1, POP  }, { 0xE5, PUSH },
-            { 0xF1, POP  }, { 0xF5, PUSH },
+            { 0xE1, POP  }, { 0xE3, XTHL }, { 0xE5, PUSH },
+            { 0xEB, XCHG },
+            { 0xF1, POP  }, { 0xF5, PUSH }, { 0xF9, SPHL },
         };
     }
 }

@@ -43,7 +43,9 @@ namespace Test8080
             DADTest();
             INXTest();
             DCXTest();
-
+            XCHGTest();
+            XTHLTest();
+            SPHLTest();
 
             Console.Read();
         }
@@ -437,6 +439,55 @@ namespace Test8080
                     cpu.Registers.HL = 0x9800;
                 },
                 goodmsg: "DCX test succeeded!"
+            );
+        }
+
+        static bool XCHGTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xEB },
+                conditions: (cpu) => {
+                    if (cpu.Registers.DE != 0x00FF) { Console.WriteLine("XCHG FAIL: DE != 0x00FF"); return false; }
+                    if (cpu.Registers.HL != 0x3355) { Console.WriteLine("XCHG FAIL: HL != 0x3355"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.DE = 0x3355;
+                    cpu.Registers.HL = 0x00FF;
+                },
+                goodmsg: "XCHG test succeeded!"  
+            );
+        }
+
+        static bool XTHLTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xE3 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.HL != 0x0DF0) { Console.WriteLine("XTHL FAIL: HL != 0x0DF0"); return false; }
+                    if (cpu.Memory[0x10AD] != 0x3C) { Console.WriteLine("XCHG FAIL: $10AD != 0x3C"); return false; }
+                    if (cpu.Memory[0x10AE] != 0x0B) { Console.WriteLine("XCHG FAIL: $10AE != 0x0B"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.SP = 0x10AD;
+                    cpu.Registers.HL = 0x0B3C;
+                    cpu.Memory[0x10AD] = 0xF0;
+                    cpu.Memory[0x10AE] = 0x0D;
+                },
+                goodmsg: "XTHL test succeeded!"
+            );
+        }
+
+        static bool SPHLTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xF9 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.SP != 0x506C) { Console.WriteLine("SPHL FAIL: SP != 0x506C"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.HL = 0x506C;
+                },
+                goodmsg: "SPHL test succeeded!"
             );
         }
     }
