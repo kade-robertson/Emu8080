@@ -49,6 +49,9 @@ namespace Test8080
 
             // Immediate Instructions
             ADITest();
+            ACITest();
+            SUITest();
+            SBITest();
 
             Console.Read();
         }
@@ -510,6 +513,64 @@ namespace Test8080
                     cpu.Registers.A = 0x14;
                 },
                 goodmsg: "ADI test succeeded!"
+            );
+        }
+
+        static bool ACITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xCE, 0xBE, 0xCE, 0x42 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x57) { Console.WriteLine("ACI FAIL: A != 0x57"); return false; }
+                    if (cpu.Flag.Carry) { Console.WriteLine("ACI FAIL: CARRY != FALSE"); return false; }
+                    if (cpu.Flag.AuxCarry) { Console.WriteLine("ACI FAIL: AUXCARRY != FALSE"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("ACI FAIL: PARITY != FALSE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("ACI FAIL: ZERO != FALSE"); return false; }
+                    if (cpu.Flag.Sign) { Console.WriteLine("ACI FAIL: SIGN != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x56;
+                },
+                goodmsg: "ACI test succeeded!"
+            );
+        }
+
+        static bool SUITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xD6, 0x01 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xFF) { Console.WriteLine("SUI FAIL: A != 0xFF"); return false; }
+                    if (!cpu.Flag.Carry) { Console.WriteLine("SUI FAIL: CARRY != TRUE"); return false; }
+                    if (cpu.Flag.AuxCarry) { Console.WriteLine("SUI FAIL: AUXCARRY != FALSE"); return false; }
+                    if (!cpu.Flag.Parity) { Console.WriteLine("SUI FAIL: PARITY != TRUE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("SUI FAIL: ZERO != FALSE"); return false; }
+                    if (!cpu.Flag.Sign) { Console.WriteLine("SUI FAIL: SIGN != TRUE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x00;
+                },
+                goodmsg: "SUI test succeeded!"
+            );
+        }
+
+        static bool SBITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xDE, 0x01 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xFE) { Console.WriteLine("SBI FAIL: A != 0xFF"); return false; }
+                    if (!cpu.Flag.Carry) { Console.WriteLine("SBI FAIL: CARRY != TRUE"); return false; }
+                    if (cpu.Flag.AuxCarry) { Console.WriteLine("SBI FAIL: AUXCARRY != FALSE"); return false; }
+                    if (cpu.Flag.Parity) { Console.WriteLine("SBI FAIL: PARITY != FALSE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("SBI FAIL: ZERO != FALSE"); return false; }
+                    if (!cpu.Flag.Sign) { Console.WriteLine("SBI FAIL: SIGN != TRUE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x00;
+                    cpu.Flag.Carry = true;
+                },
+                goodmsg: "SBI test succeeded!"
             );
         }
     }

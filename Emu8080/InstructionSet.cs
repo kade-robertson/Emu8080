@@ -758,6 +758,73 @@ namespace Emu8080
             }
         };
 
+        // ACI - Add Immediate To Accumulator With Carry
+        // 0xCE
+        public static Instruction ACI = new Instruction() {
+            Text = "ACI",
+            Execute = (mem, args, reg, flag) => {
+                var carryb = flag.Carry ? 1 : 0;
+                var result = reg.A + args[1] + carryb;
+                flag.Carry = (result > 0xFF);
+                flag.AuxCarry = ((reg.A & 0xF) + (args[1] & 0xF) + carryb) > 0xF;
+                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                flag.Sign = ((result & 0xFF) >> 7) == 1;
+                flag.Zero = (result == 0);
+                reg.A = (byte)(result & 0xFF);
+                return true;
+            },
+            Arity = 2,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return $"ACI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // SUI - Subtract Immediate From Accumulator
+        // 0xD6
+        public static Instruction SUI = new Instruction() {
+            Text = "SUI",
+            Execute = (mem, args, reg, flag) => {
+                var twocomp = ((~args[1] + 1) & 0xFF);
+                var result = reg.A + twocomp;
+                flag.Carry = (result <= 0xFF);
+                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                flag.Sign = ((result & 0xFF) >> 7) == 1;
+                flag.Zero = (result == 0);
+                reg.A = (byte)(result & 0xFF);
+                return true;
+            },
+            Arity = 2,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return $"SUI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // SBI - Subtract Immediate From Accumulator With Borrow
+        // 0xDE
+        public static Instruction SBI = new Instruction() {
+            Text = "SBI",
+            Execute = (mem, args, reg, flag) => {
+                var carryb = flag.Carry ? 1 : 0;
+                var twocomp = ((~(args[1] + carryb) + 1) & 0xFF);
+                var result = reg.A + twocomp;
+                flag.Carry = (result <= 0xFF);
+                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                flag.Sign = ((result & 0xFF) >> 7) == 1;
+                flag.Zero = (result == 0);
+                reg.A = (byte)(result & 0xFF);
+                return true;
+            },
+            Arity = 2,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return $"SBI    #${args[1].ToString("X2")}";
+            }
+        };
+
         // XTHL - Exchange Stack
         // 0xE3
         public static Instruction XTHL = new Instruction() {
@@ -835,8 +902,10 @@ namespace Emu8080
             { 0xA8, XRA  }, { 0xA9, XRA  }, { 0xAA, XRA  }, { 0xAB, XRA  }, { 0xAC, XRA  }, { 0xAD, XRA  }, { 0xAE, XRA  }, { 0xAF, XRA  },
             { 0xB0, ORA  }, { 0xB1, ORA  }, { 0xB2, ORA  }, { 0xB3, ORA  }, { 0xB4, ORA  }, { 0xB5, ORA  }, { 0xB6, ORA  }, { 0xB7, ORA  },
             { 0xB8, CMP  }, { 0xB9, CMP  }, { 0xBA, CMP  }, { 0xBB, CMP  }, { 0xBC, CMP  }, { 0xBD, CMP  }, { 0xBE, CMP  }, { 0xBF, CMP  },
-            { 0xC1, POP  }, { 0xC5, PUSH }, { 0xC6, ADI  }, 
-            { 0xD1, POP  }, { 0xD5, PUSH },
+            { 0xC1, POP  }, { 0xC5, PUSH }, { 0xC6, ADI  },
+            { 0xCE, ACI  },
+            { 0xD1, POP  }, { 0xD5, PUSH }, { 0xD6, SUI  },
+            { 0xDE, SBI  },
             { 0xE1, POP  }, { 0xE3, XTHL }, { 0xE5, PUSH },
             { 0xEB, XCHG },
             { 0xF1, POP  }, { 0xF5, PUSH }, { 0xF9, SPHL },
