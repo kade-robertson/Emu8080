@@ -12,7 +12,7 @@ namespace Test8080
             setup?.Invoke(env);
 
             var counter = 0;
-            while (counter < program.Length && env.Step()) {
+            while (env.Registers.PC < program.Length && env.Step()) {
                 counter += 1;
             }
 

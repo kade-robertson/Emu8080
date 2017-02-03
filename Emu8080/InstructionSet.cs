@@ -737,6 +737,27 @@ namespace Emu8080
             }
         };
 
+        // ADI - Add Immediate To Accumulator
+        // 0xC6
+        public static Instruction ADI = new Instruction() {
+            Text = "ADI",
+            Execute = (mem, args, reg, flag) => {
+                var result = reg.A + args[1];
+                flag.Carry = (result > 0xFF);
+                flag.AuxCarry = ((reg.A & 0xF) + (args[1] & 0xF)) > 0xF;
+                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                flag.Sign = ((result & 0xFF) >> 7) == 1;
+                flag.Zero = (result == 0);
+                reg.A = (byte)(result & 0xFF);
+                return true;
+            },
+            Arity = 2,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return $"ADI    #${args[1].ToString("X2")}";
+            }
+        };
+
         // XTHL - Exchange Stack
         // 0xE3
         public static Instruction XTHL = new Instruction() {
@@ -814,7 +835,7 @@ namespace Emu8080
             { 0xA8, XRA  }, { 0xA9, XRA  }, { 0xAA, XRA  }, { 0xAB, XRA  }, { 0xAC, XRA  }, { 0xAD, XRA  }, { 0xAE, XRA  }, { 0xAF, XRA  },
             { 0xB0, ORA  }, { 0xB1, ORA  }, { 0xB2, ORA  }, { 0xB3, ORA  }, { 0xB4, ORA  }, { 0xB5, ORA  }, { 0xB6, ORA  }, { 0xB7, ORA  },
             { 0xB8, CMP  }, { 0xB9, CMP  }, { 0xBA, CMP  }, { 0xBB, CMP  }, { 0xBC, CMP  }, { 0xBD, CMP  }, { 0xBE, CMP  }, { 0xBF, CMP  },
-            { 0xC1, POP  }, { 0xC5, PUSH },
+            { 0xC1, POP  }, { 0xC5, PUSH }, { 0xC6, ADI  }, 
             { 0xD1, POP  }, { 0xD5, PUSH },
             { 0xE1, POP  }, { 0xE3, XTHL }, { 0xE5, PUSH },
             { 0xEB, XCHG },

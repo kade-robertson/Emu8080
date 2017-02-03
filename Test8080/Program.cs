@@ -47,6 +47,9 @@ namespace Test8080
             XTHLTest();
             SPHLTest();
 
+            // Immediate Instructions
+            ADITest();
+
             Console.Read();
         }
 
@@ -488,6 +491,25 @@ namespace Test8080
                     cpu.Registers.HL = 0x506C;
                 },
                 goodmsg: "SPHL test succeeded!"
+            );
+        }
+
+        static bool ADITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xC6, 0x42, 0xC6, 0xBE },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0x14) { Console.WriteLine("ADI FAIL: A != 0x14"); return false; }
+                    if (!cpu.Flag.Carry) { Console.WriteLine("ADI FAIL: CARRY != TRUE"); return false; }
+                    if (!cpu.Flag.AuxCarry) { Console.WriteLine("ADI FAIL: AUXCARRY != TRUE"); return false; }
+                    if (!cpu.Flag.Parity) { Console.WriteLine("ADI FAIL: PARITY != TRUE"); return false; }
+                    if (cpu.Flag.Zero) { Console.WriteLine("ADI FAIL: ZERO != FALSE"); return false; }
+                    if (cpu.Flag.Sign) { Console.WriteLine("ADI FAIL: SIGN != FALSE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0x14;
+                },
+                goodmsg: "ADI test succeeded!"
             );
         }
     }
