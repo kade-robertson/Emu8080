@@ -57,6 +57,12 @@ namespace Test8080
             ORITest();
             CPITest();
 
+            // Direct Addressing Instructions
+            STATest();
+            LDATest();
+            SHLDTest();
+            LHLDTest();
+
             Console.Read();
         }
 
@@ -647,5 +653,78 @@ namespace Test8080
                 goodmsg: "CPI test succeeded!"
             );
         }
+
+        static bool STATest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x32, 0xB3, 0x05 },
+                conditions: (cpu) => {
+                    if (cpu.Memory[0x5B3] != 0xFE) { Console.WriteLine("STA Fail: $05B3 != 0xFE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.A = 0xFE;
+                },
+                goodmsg: "STA test succeeded!"
+            );
+        }
+
+        static bool LDATest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x3A, 0xB3, 0x05 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.A != 0xFE) { Console.WriteLine("LDA Fail: A != 0xFE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Memory[0x5B3] = 0xFE;
+                },
+                goodmsg: "LDA test succeeded!"
+            );
+        }
+
+        static bool SHLDTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x22, 0xED, 0xFE },
+                conditions: (cpu) => {
+                    if (cpu.Memory[0xFEED] != 0x21) { Console.WriteLine("SHLD Fail: $FEED != 0x21"); return false; }
+                    if (cpu.Memory[0xFEEE] != 0x43) { Console.WriteLine("SHLD Fail: $FEEE != 0x43"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.HL = 0x4321;
+                },
+                goodmsg: "SHLD test succeeded!"
+            );
+        }
+
+        static bool LHLDTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x2A, 0xED, 0xFE },
+                conditions: (cpu) => {
+                    if (cpu.Registers.L != 0x21) { Console.WriteLine("LHLD Fail: L != 0x21"); return false; }
+                    if (cpu.Registers.H != 0x43) { Console.WriteLine("LHLD Fail: H != 0x43"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Memory[0xFEED] = 0x21;
+                    cpu.Memory[0xFEEE] = 0x43;
+                },
+                goodmsg: "LHLD test succeeded!"
+            );
+        }
+
+        // base format
+        //static bool STATest() {
+        //    return Harness.CheckConditions(
+        //        program: new byte[] { },
+        //        conditions: (cpu) => {
+        //            return true;
+        //        },
+        //        setup: (cpu) => {
+
+        //        },
+        //        goodmsg: "STA test succeeded!"
+        //    );
+        //}
     }
 }

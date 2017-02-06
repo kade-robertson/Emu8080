@@ -195,6 +195,23 @@ namespace Emu8080
             }
         };
 
+        // SHLD - Store H and L Direct
+        // 0x22
+        public static Instruction SHLD = new Instruction() {
+            Text = "SHLD",
+            Execute = (mem, args, reg, flag) => {
+                var addr = (args[2] << 8) | args[1];
+                mem[addr] = reg.L;
+                mem[addr + 1] = reg.H;
+                return true;
+            },
+            Arity = 3,
+            Cycles = 16,
+            GetPrintString = (args) => {
+                return $"SHLD   ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
         // DAA - Decimal Adjust Accumulator
         // 0x27
         public static Instruction DAA = new Instruction() {
@@ -225,6 +242,23 @@ namespace Emu8080
             }
         };
 
+        // LHLD - Load H and L Direct
+        // 0x2A
+        public static Instruction LHLD = new Instruction() {
+            Text = "LHLD",
+            Execute = (mem, args, reg, flag) => {
+                var addr = (args[2] << 8) | args[1];
+                reg.L = mem[addr];
+                reg.H = mem[addr + 1];
+                return true;
+            },
+            Arity = 3,
+            Cycles = 16,
+            GetPrintString = (args) => {
+                return $"LHLD   ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
         // CMA - Complement Accumulator
         // 0x2F
         public static Instruction CMA = new Instruction() {
@@ -241,6 +275,22 @@ namespace Emu8080
             }
         };
 
+        // STA - Store Accumulator Direct
+        // 0x32
+        public static Instruction STA = new Instruction() {
+            Text = "STA",
+            Execute = (mem, args, reg, flag) => {
+                var addr = (args[2] << 8) | args[1];
+                mem[addr] = reg.A;
+                return true;
+            },
+            Arity = 3,
+            Cycles = 13,
+            GetPrintString = (args) => {
+                return $"STA    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
         // STC - Set Carry
         // 0x37
         public static Instruction STC = new Instruction() {
@@ -250,6 +300,22 @@ namespace Emu8080
             Cycles = 4,
             GetPrintString = (args) => {
                 return $"STC";
+            }
+        };
+
+        // LDA - Load Accumulator Direct
+        // 0x3A
+        public static Instruction LDA = new Instruction() {
+            Text = "LDA",
+            Execute = (mem, args, reg, flag) => {
+                var addr = (args[2] << 8) | args[1];
+                reg.A = mem[addr];
+                return true;
+            },
+            Arity = 3,
+            Cycles = 13,
+            GetPrintString = (args) => {
+                return $"LDA    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
         };
 
@@ -966,10 +1032,10 @@ namespace Emu8080
             { 0x09, DAD  }, { 0x0A, LDAX }, { 0x0B, DCX  }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
             { 0x12, STAX }, { 0x13, INX  }, { 0x14, INR  }, { 0x15, DCR  }, { 0x17, RAL  },
             { 0x19, DAD  }, { 0x1A, LDAX }, { 0x1B, DCX  }, { 0x1C, INR  }, { 0x1D, DCR  }, { 0x1F, RAR  },
-            { 0x23, INX  }, { 0x24, INR  }, { 0x25, DCR  }, { 0x27, DAA  },
-            { 0x29, DAD  }, { 0x2B, DCX  }, { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },
-            { 0x33, INX  }, { 0x34, INR  }, { 0x35, DCR  }, { 0x37, STC  },
-            { 0x39, DAD  }, { 0x3B, DCX  }, { 0x3C, INR  }, { 0x3D, DCR  }, { 0x3F, CMC  },
+            { 0x22, SHLD }, { 0x23, INX  }, { 0x24, INR  }, { 0x25, DCR  }, { 0x27, DAA  },
+            { 0x29, DAD  }, { 0x2A, LHLD }, { 0x2B, DCX  }, { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },
+            { 0x32, STA  }, { 0x33, INX  }, { 0x34, INR  }, { 0x35, DCR  }, { 0x37, STC  },
+            { 0x39, DAD  }, { 0x3A, LDA  }, { 0x3B, DCX  }, { 0x3C, INR  }, { 0x3D, DCR  }, { 0x3F, CMC  },
             { 0x40, MOV  }, { 0x41, MOV  }, { 0x42, MOV  }, { 0x43, MOV  }, { 0x44, MOV  }, { 0x45, MOV  }, { 0x46, MOV  }, { 0x47, MOV  },
             { 0x48, MOV  }, { 0x49, MOV  }, { 0x4A, MOV  }, { 0x4B, MOV  }, { 0x4C, MOV  }, { 0x4D, MOV  }, { 0x4E, MOV  }, { 0x4F, MOV  },
             { 0x50, MOV  }, { 0x51, MOV  }, { 0x52, MOV  }, { 0x53, MOV  }, { 0x54, MOV  }, { 0x55, MOV  }, { 0x56, MOV  }, { 0x57, MOV  },

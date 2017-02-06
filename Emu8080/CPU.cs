@@ -18,16 +18,19 @@ namespace Emu8080
             try {
                 var todo = InstructionSet.Instructions[inst];
                 var args = new byte[3] { Memory[Registers.PC], 0, 0 };
-                if (todo.Arity == 2) {
-                    args[1] = Memory[++Registers.PC];
+                var toadd = (ushort)1;
+                if (todo.Arity >= 2) {
+                    args[1] = Memory[Registers.PC + 1];
+                    toadd++;
                 }
                 if (todo.Arity == 3) {
-                    args[2] = Memory[++Registers.PC];
+                    args[2] = Memory[Registers.PC + 2];
+                    toadd++;
                 }
-                Registers.PC++;
                 if (debug) {
                     Console.WriteLine(GetDebugText(todo, args));
                 }
+                Registers.PC += toadd;
                 var cycletouse = todo.Execute(Memory, args, Registers, Flag);
                 return true;
             } catch (KeyNotFoundException) {
