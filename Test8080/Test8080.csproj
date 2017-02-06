@@ -43,6 +43,9 @@
     <Compile Include="Harness.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tests\SingleRegister.cs" />
+    <Compile Include="TestUtils.cs" />
+    <Compile Include="Tests\CarryBit.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

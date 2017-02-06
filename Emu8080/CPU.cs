@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Emu8080 
@@ -10,8 +11,9 @@ namespace Emu8080
         public byte[] Memory;
         public CPURegisters Registers;
         public CPUFlag Flag;
+        public TextWriter DebugStream = Console.Out;
 
-        public bool Step(bool debug = true) {
+        public bool Step(bool debug = false) {
             var inst = Memory[Registers.PC];
             try {
                 var todo = InstructionSet.Instructions[inst];
@@ -26,7 +28,7 @@ namespace Emu8080
                     toadd++;
                 }
                 if (debug) {
-                    Console.WriteLine(GetDebugText(todo, args));
+                    DebugStream.WriteLine(GetDebugText(todo, args));
                 }
                 Registers.PC += toadd;
                 var cycletouse = todo.Execute(Memory, args, Registers, Flag);

@@ -1,4 +1,5 @@
 ﻿using System;
+using Test8080.Tests;
 
 namespace Test8080 
 {
@@ -7,14 +8,10 @@ namespace Test8080
         static void Main(string[] args) 
         {
             // Carry Bit Instructions
-            CMCTest();
-            STCTest();
+            CarryBit.TestAll();
 
             // Single Register Instructions
-            DCRTest();
-            INRTest();
-            CMATest();
-            DAATest();
+            SingleRegister.TestAll();
 
             // Data Transfer Instructions
             MOVTest();
@@ -73,91 +70,6 @@ namespace Test8080
             JMTest();
 
             Console.Read();
-        }
-
-        static bool CMCTest() {
-            return Harness.CheckConditions(
-                program: new byte[] { 0x3F },
-                conditions: (cpu) => {
-                    if (cpu.Flag.Carry) { Console.WriteLine("CMC FAIL: CARRY != FALSE"); return false; }
-                    return true;
-                },
-                setup: (cpu) => {
-                    cpu.Flag.Carry = true;
-                },
-                goodmsg: "CMC test succeeded!"
-            );
-        }
-
-        static bool STCTest() {
-            return Harness.CheckConditions(
-                program: new byte[] { 0x37 },
-                conditions: (cpu) => {
-                    if (!cpu.Flag.Carry) { Console.WriteLine("STC FAIL: CARRY != TRUE"); return false; }
-                    return true;
-                },
-                goodmsg: "STC test succeeded!"
-            );
-        }
-
-        static bool DCRTest() {
-            return Harness.CheckConditions(
-                program: new byte[] { 0x3D },
-                conditions: (cpu) => {
-                    if (cpu.Registers.A != 0xFF) { Console.WriteLine("DCR FAIL: A != 0xFF"); return false; }
-                    if (!cpu.Flag.Sign) { Console.WriteLine("DCR FAIL: SIGN != TRUE"); return false; }
-                    if (!cpu.Flag.Parity) { Console.WriteLine("DCR FAIL: PARITY != TRUE"); return false; }
-                    return true;
-                },
-                goodmsg: "DCR test succeeded!"
-            );
-        }
-
-        static bool INRTest() {
-            return Harness.CheckConditions(
-                program: new byte[] { 0x3C },
-                conditions: (cpu) => {
-                    if (cpu.Registers.A != 0x00) { Console.WriteLine("INR FAIL: A != 0x00"); return false; }
-                    if (!cpu.Flag.Zero) { Console.WriteLine("INR FAIL: ZERO != TRUE"); return false; }
-                    if (!cpu.Flag.Parity) { Console.WriteLine("INR FAIL: PARITY != TRUE"); return false; }
-                    if (!cpu.Flag.AuxCarry) { Console.WriteLine("INR FAIL: AUXCARRY != TRUE"); return false; }
-                    return true;
-                },
-                setup: (cpu) => {
-                    cpu.Registers.A = 0xFF;
-                },
-                goodmsg: "INR test succeeded!"
-            );
-        }
-
-        static bool CMATest() {
-            return Harness.CheckConditions(
-                program: new byte[] { 0x2F },
-                conditions: (cpu) => {
-                    if (cpu.Registers.A != 0xAE) { Console.WriteLine("CMA FAIL: A != 0xAE"); return false; }
-                    return true;
-                },
-                setup: (cpu) => {
-                    cpu.Registers.A = 0x51;
-                },
-                goodmsg: "CMA test succeeded!"   
-            );
-        }
-
-        static bool DAATest() {
-            return Harness.CheckConditions(
-                program: new byte[] { 0x27 },
-                conditions: (cpu) => {
-                    if (cpu.Registers.A != 0x01) { Console.WriteLine("DAA FAIL: A != 0x01"); return false; }
-                    if (!cpu.Flag.AuxCarry) { Console.WriteLine("DAA FAIL: AUXCARRY != TRUE"); return false; }
-                    if (!cpu.Flag.Carry) { Console.WriteLine("DAA FAIL: CARRY != TRUE"); return false; }
-                    return true;
-                },
-                setup: (cpu) => {
-                    cpu.Registers.A = 0x9B;
-                },
-                goodmsg: "DAA test succeeded!"
-            );
         }
 
         static bool MOVTest() {

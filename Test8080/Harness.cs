@@ -9,17 +9,10 @@ namespace Test8080
             CPU env = new CPU();
             env.Load(program);
             setup?.Invoke(env);
+            
+            while (env.Registers.PC < program.Length && env.Step()) { }
 
-            var counter = 0;
-            while (env.Registers.PC < program.Length && env.Step()) {
-                counter += 1;
-            }
-
-            var result = conditions(env);
-            if (result) {
-                Console.WriteLine(goodmsg);
-            }
-            return result;
+            return conditions(env);
         }
     }
 }
