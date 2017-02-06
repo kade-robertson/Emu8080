@@ -1,7 +1,4 @@
 ﻿using System;
-using Emu8080;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Test8080 
 {
@@ -62,6 +59,18 @@ namespace Test8080
             LDATest();
             SHLDTest();
             LHLDTest();
+
+            // Jump Instructions
+            PCHLTest();
+            JMPTest();
+            JNZTest();
+            JZTest();
+            JNCTest();
+            JCTest();
+            JPOTest();
+            JPETest();
+            JPTest();
+            JMTest();
 
             Console.Read();
         }
@@ -658,7 +667,7 @@ namespace Test8080
             return Harness.CheckConditions(
                 program: new byte[] { 0x32, 0xB3, 0x05 },
                 conditions: (cpu) => {
-                    if (cpu.Memory[0x5B3] != 0xFE) { Console.WriteLine("STA Fail: $05B3 != 0xFE"); return false; }
+                    if (cpu.Memory[0x5B3] != 0xFE) { Console.WriteLine("STA FAIL: $05B3 != 0xFE"); return false; }
                     return true;
                 },
                 setup: (cpu) => {
@@ -672,7 +681,7 @@ namespace Test8080
             return Harness.CheckConditions(
                 program: new byte[] { 0x3A, 0xB3, 0x05 },
                 conditions: (cpu) => {
-                    if (cpu.Registers.A != 0xFE) { Console.WriteLine("LDA Fail: A != 0xFE"); return false; }
+                    if (cpu.Registers.A != 0xFE) { Console.WriteLine("LDA FAIL: A != 0xFE"); return false; }
                     return true;
                 },
                 setup: (cpu) => {
@@ -686,8 +695,8 @@ namespace Test8080
             return Harness.CheckConditions(
                 program: new byte[] { 0x22, 0xED, 0xFE },
                 conditions: (cpu) => {
-                    if (cpu.Memory[0xFEED] != 0x21) { Console.WriteLine("SHLD Fail: $FEED != 0x21"); return false; }
-                    if (cpu.Memory[0xFEEE] != 0x43) { Console.WriteLine("SHLD Fail: $FEEE != 0x43"); return false; }
+                    if (cpu.Memory[0xFEED] != 0x21) { Console.WriteLine("SHLD FAIL: $FEED != 0x21"); return false; }
+                    if (cpu.Memory[0xFEEE] != 0x43) { Console.WriteLine("SHLD FAIL: $FEEE != 0x43"); return false; }
                     return true;
                 },
                 setup: (cpu) => {
@@ -701,8 +710,8 @@ namespace Test8080
             return Harness.CheckConditions(
                 program: new byte[] { 0x2A, 0xED, 0xFE },
                 conditions: (cpu) => {
-                    if (cpu.Registers.L != 0x21) { Console.WriteLine("LHLD Fail: L != 0x21"); return false; }
-                    if (cpu.Registers.H != 0x43) { Console.WriteLine("LHLD Fail: H != 0x43"); return false; }
+                    if (cpu.Registers.L != 0x21) { Console.WriteLine("LHLD FAIL: L != 0x21"); return false; }
+                    if (cpu.Registers.H != 0x43) { Console.WriteLine("LHLD FAIL: H != 0x43"); return false; }
                     return true;
                 },
                 setup: (cpu) => {
@@ -713,18 +722,141 @@ namespace Test8080
             );
         }
 
-        // base format
-        //static bool STATest() {
-        //    return Harness.CheckConditions(
-        //        program: new byte[] { },
-        //        conditions: (cpu) => {
-        //            return true;
-        //        },
-        //        setup: (cpu) => {
+        static bool PCHLTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xE9 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0x413E) { Console.WriteLine("PCHL FAIL: PC != 0x413E"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.HL = 0x413E;
+                },
+                goodmsg: "PCHL test succeeded!"
+            );
+        }
 
-        //        },
-        //        goodmsg: "STA test succeeded!"
-        //    );
-        //}
+        static bool JMPTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xC3, 0x00, 0x3E },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0x3E00) { Console.WriteLine("JMP FAIL: PC != 0x3E00"); return false; }
+                    return true;
+                },
+                goodmsg: "JMP test succeeded!"
+            );
+        }
+
+        static bool JNZTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xC2, 0xFE, 0xCA },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0xCAFE) { Console.WriteLine("JNZ FAIL: PC != 0xCAFE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Zero = false;
+                },
+                goodmsg: "JNZ test succeeded!"
+            );
+        }
+
+        static bool JZTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xCA, 0xBE, 0xBA },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0xBABE) { Console.WriteLine("JZ FAIL: PC != 0xBABE"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Zero = true;
+                },
+                goodmsg: "JZ test succeeded!"
+            );
+        }
+
+        static bool JNCTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xD2, 0xAD, 0xDE },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0xDEAD) { Console.WriteLine("JNC FAIL: PC != 0xDEAD"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Carry = false;
+                },
+                goodmsg: "JNC test succeeded!"
+            );
+        }
+
+        static bool JCTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xDA, 0xEF, 0xBE },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0xBEEF) { Console.WriteLine("JC FAIL: PC != 0xBEEF"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Carry = true;
+                },
+                goodmsg: "JC test succeeded!"
+            );
+        }
+
+        static bool JPOTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xE2, 0x0F, 0xD0 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0xD00F) { Console.WriteLine("JPO FAIL: PC != 0xD00F"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Parity = false;
+                },
+                goodmsg: "JPO test succeeded!"
+            );
+        }
+
+        static bool JPETest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xEA, 0x0D, 0xF0 },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0xF00D) { Console.WriteLine("JPE FAIL: PC != 0xF00D"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Parity = true;
+                },
+                goodmsg: "JPE test succeeded!"
+            );
+        }
+
+        static bool JPTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xF2, 0xED, 0x0F },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0xFED) { Console.WriteLine("JP FAIL: PC != 0xFED"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Sign = false;
+                },
+                goodmsg: "JM test succeeded!"
+            );
+        }
+
+        static bool JMTest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0xFA, 0xAF, 0xDE },
+                conditions: (cpu) => {
+                    if (cpu.Registers.PC != 0xDEAF) { Console.WriteLine("JM FAIL: PC != 0xDEAF"); return false; }
+                    return true;
+                },
+                setup: (cpu) => {
+                    cpu.Flag.Sign = true;
+                },
+                goodmsg: "JM test succeeded!"
+            );
+        }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using Emu8080;
-using System.Collections.Generic;
 
 namespace Test8080 
 {

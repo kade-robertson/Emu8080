@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 // Thank God for http://altairclone.com/downloads/manuals/8080%20Programmers%20Manual.pdf
 
@@ -803,6 +799,38 @@ namespace Emu8080
             }
         };
 
+        // JNZ - Jump If Not Zero
+        // 0xC2
+        public static Instruction JNZ = new Instruction() {
+            Text = "JNZ",
+            Execute = (mem, args, reg, flag) => {
+                if (!flag.Zero) {
+                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JNZ    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
+        // JMP - Jump
+        // 0xC3
+        public static Instruction JMP = new Instruction() {
+            Text = "JMP",
+            Execute = (mem, args, reg, flag) => {
+                reg.PC = (ushort)((args[2] << 8) | args[1]);
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JMP    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
         // ADI - Add Immediate To Accumulator
         // 0xC6
         public static Instruction ADI = new Instruction() {
@@ -821,6 +849,23 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 return $"ADI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // JZ - Jump If Zero
+        // 0xCA
+        public static Instruction JZ = new Instruction() {
+            Text = "JZ",
+            Execute = (mem, args, reg, flag) => {
+                if (flag.Zero) {
+                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JZ     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
         };
 
@@ -846,6 +891,23 @@ namespace Emu8080
             }
         };
 
+        // JNC - Jump If No Carry
+        // 0xD2
+        public static Instruction JNC = new Instruction() {
+            Text = "JNC",
+            Execute = (mem, args, reg, flag) => {
+                if (!flag.Carry) {
+                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JNC    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
         // SUI - Subtract Immediate From Accumulator
         // 0xD6
         public static Instruction SUI = new Instruction() {
@@ -865,6 +927,23 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 return $"SUI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // JC - Jump If Carry
+        // 0xDA
+        public static Instruction JC = new Instruction() {
+            Text = "JC",
+            Execute = (mem, args, reg, flag) => {
+                if (flag.Carry) {
+                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JC     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
         };
 
@@ -888,6 +967,23 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 return $"SBI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // JPO - Jump If Parity Odd
+        // 0xE2
+        public static Instruction JPO = new Instruction() {
+            Text = "JPO",
+            Execute = (mem, args, reg, flag) => {
+                if (!flag.Parity) {
+                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JPO    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
         };
 
@@ -932,6 +1028,23 @@ namespace Emu8080
             }
         };
 
+        // JPE - Jump If Parity Even
+        // 0xEA
+        public static Instruction JPE = new Instruction() {
+            Text = "JPE",
+            Execute = (mem, args, reg, flag) => {
+                if (flag.Parity) {
+                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JPE    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
         // XCHG - Exchange Registers
         // 0xEB
         public static Instruction XCHG = new Instruction() {
@@ -970,6 +1083,38 @@ namespace Emu8080
             }
         };
 
+        // PCHL - Load Program Counter
+        // 0xE9
+        public static Instruction PCHL = new Instruction() {
+            Text = "PCHL",
+            Execute = (mem, args, reg, flag) => {
+                reg.PC = reg.HL;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 5,
+            GetPrintString = (args) => {
+                return "PCHL";
+            }
+        };
+
+        // JP - Jump If Positive
+        // 0xF2
+        public static Instruction JP = new Instruction() {
+            Text = "JP",
+            Execute = (mem, args, reg, flag) => {
+                if (!flag.Sign) {
+                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JP     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
         // ORI - Or Immediate With Accumulator
         // 0xF6
         public static Instruction ORI = new Instruction() {
@@ -1003,6 +1148,23 @@ namespace Emu8080
             Cycles = 5,
             GetPrintString = (args) => {
                 return "SPHL";
+            }
+        };
+
+        // JM - Jump If Minus
+        // 0xFA
+        public static Instruction JM = new Instruction() {
+            Text = "JM",
+            Execute = (mem, args, reg, flag) => {
+                if (flag.Sign) {
+                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"JM     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
         };
 
@@ -1052,14 +1214,14 @@ namespace Emu8080
             { 0xA8, XRA  }, { 0xA9, XRA  }, { 0xAA, XRA  }, { 0xAB, XRA  }, { 0xAC, XRA  }, { 0xAD, XRA  }, { 0xAE, XRA  }, { 0xAF, XRA  },
             { 0xB0, ORA  }, { 0xB1, ORA  }, { 0xB2, ORA  }, { 0xB3, ORA  }, { 0xB4, ORA  }, { 0xB5, ORA  }, { 0xB6, ORA  }, { 0xB7, ORA  },
             { 0xB8, CMP  }, { 0xB9, CMP  }, { 0xBA, CMP  }, { 0xBB, CMP  }, { 0xBC, CMP  }, { 0xBD, CMP  }, { 0xBE, CMP  }, { 0xBF, CMP  },
-            { 0xC1, POP  }, { 0xC5, PUSH }, { 0xC6, ADI  },
-            { 0xCE, ACI  },
-            { 0xD1, POP  }, { 0xD5, PUSH }, { 0xD6, SUI  },
-            { 0xDE, SBI  },
-            { 0xE1, POP  }, { 0xE3, XTHL }, { 0xE5, PUSH }, { 0xE6, ANI  },
-            { 0xEB, XCHG }, { 0xEE, XRI  },
-            { 0xF1, POP  }, { 0xF5, PUSH }, { 0xF6, ORI  },
-            { 0xF9, SPHL }, { 0xFE, CPI  },
+            { 0xC1, POP  }, { 0xC2, JNZ  }, { 0xC3, JMP  }, { 0xC5, PUSH }, { 0xC6, ADI  },
+            { 0xCA, JZ   }, { 0xCE, ACI  },
+            { 0xD1, POP  }, { 0xD2, JNC  }, { 0xD5, PUSH }, { 0xD6, SUI  },
+            { 0xDA, JC   }, { 0xDE, SBI  },
+            { 0xE1, POP  }, { 0xE2, JPO  }, { 0xE3, XTHL }, { 0xE5, PUSH }, { 0xE6, ANI  },
+            { 0xE9, PCHL }, { 0xEA, JPE  }, { 0xEB, XCHG }, { 0xEE, XRI  },
+            { 0xF1, POP  }, { 0xF2, JP   }, { 0xF5, PUSH }, { 0xF6, ORI  },
+            { 0xF9, SPHL }, { 0xFA, JM   }, { 0xFE, CPI  },
         };
     }
 }
