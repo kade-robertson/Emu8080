@@ -43,6 +43,13 @@
     <Compile Include="Harness.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tests\DataTransfer.cs" />
+    <Compile Include="Tests\DirectAddressing.cs" />
+    <Compile Include="Tests\Immediates.cs" />
+    <Compile Include="Tests\Jumps.cs" />
+    <Compile Include="Tests\RegisterPair.cs" />
+    <Compile Include="Tests\RegOrMemToAccum.cs" />
+    <Compile Include="Tests\RotateAccum.cs" />
     <Compile Include="Tests\SingleRegister.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="Tests\CarryBit.cs" />
