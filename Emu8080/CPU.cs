@@ -42,6 +42,11 @@ namespace Emu8080
             }
         }
 
+        public void StackPop(out ushort outp) {
+            outp = (ushort)((Memory[Registers.SP + 1] << 8) | Memory[Registers.SP]);
+            Registers.SP += 2;
+        }
+
         public bool Check() {
             foreach (KeyValuePair<byte, Instruction> k in InstructionSet.Instructions) {
                 Console.WriteLine(k.Key.ToString("X2") + " : " + k.Value.Text);

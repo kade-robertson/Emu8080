@@ -15,7 +15,7 @@ namespace Test8080.Tests
             }, "Carry bit test results:");
         }
 
-        public static bool CMCTest() {
+        static bool CMCTest() {
             return Harness.CheckConditions(
                 program: new byte[] { 0x3F },
                 conditions: (cpu) => {
@@ -27,7 +27,7 @@ namespace Test8080.Tests
             );
         }
 
-        public static bool STCTest() {
+        static bool STCTest() {
             return Harness.CheckConditions(
                 program: new byte[] { 0x37 },
                 conditions: (cpu) => {
