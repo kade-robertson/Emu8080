@@ -10,6 +10,8 @@ namespace Test8080.Tests
     {
         public static bool TestAll() {
             return TestUtils.DoTests(new List<KeyValuePair<string, bool>>() {
+                new KeyValuePair<string, bool>("LXI", LXITest()),
+                new KeyValuePair<string, bool>("MVI", MVITest()),
                 new KeyValuePair<string, bool>("ADI", ADITest()),
                 new KeyValuePair<string, bool>("ACI", ACITest()),
                 new KeyValuePair<string, bool>("SUI", SUITest()),
@@ -19,6 +21,27 @@ namespace Test8080.Tests
                 new KeyValuePair<string, bool>("ORI", ORITest()),
                 new KeyValuePair<string, bool>("CPI", CPITest())
             }, "Immediate test results:");
+        }
+
+        static bool LXITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x01, 0xAA, 0xAB, 0x11, 0xED, 0xFE, 0x21, 0xFE, 0xCA, 0x31, 0x0D, 0xF0 },
+                conditions: (cpu) => {
+                    return cpu.Registers.BC == 0xABAA && cpu.Registers.DE == 0xFEED && cpu.Registers.HL == 0xCAFE && cpu.Registers.SP == 0xF00D;
+                }
+            );
+        }
+
+        static bool MVITest() {
+            return Harness.CheckConditions(
+                program: new byte[] { 0x06, 0xFE, 0x1E, 0x20, 0x36, 0x3E, 0x3E, 0xF2 },
+                conditions: (cpu) => {
+                    return cpu.Registers.B == 0xFE && cpu.Registers.E == 0x20 && cpu.Memory[0x200] == 0x3E && cpu.Registers.A == 0xF2;
+                },
+                setup: (cpu) => {
+                    cpu.Registers.HL = 0x200;
+                }
+            );
         }
 
         static bool ADITest() {
