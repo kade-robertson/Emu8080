@@ -11,6 +11,7 @@ namespace Emu8080
         public byte[] Memory;
         public CPURegisters Registers;
         public CPUFlag Flag;
+        public CPUBus Bus;
         public TextWriter DebugStream = Console.Out;
 
         public bool Step(bool debug = false) {
@@ -72,12 +73,10 @@ namespace Emu8080
             Memory = new byte[65536];
             Registers = new CPURegisters();
             Flag = new CPUFlag();
+            Bus = new CPUBus();
         }
 
-        public CPU(byte[] rom, int index = 0) {
-            Memory = new byte[65536];
-            Registers = new CPURegisters();
-            Flag = new CPUFlag();
+        public CPU(byte[] rom, int index = 0) : this() {
             Array.Copy(rom, 0, Memory, index, rom.Length);
         }
 

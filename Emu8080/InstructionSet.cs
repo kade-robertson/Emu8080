@@ -860,7 +860,7 @@ namespace Emu8080
         };
 
         // JMP - Jump
-        // 0xC3
+        // 0xC3 (0xCB)
         public static Instruction JMP = new Instruction() {
             Text = "JMP",
             Execute = (cpu, args) => {
@@ -1493,6 +1493,21 @@ namespace Emu8080
             }
         };
 
+        // DI - Disable Interrupts
+        // 0xF3
+        public static Instruction DI = new Instruction() {
+            Text = "DI",
+            Execute = (cpu, args) => {
+                cpu.Bus.Interrupt = false;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return "DI";
+            }
+        };
+
         // CP - Call If Positive
         // 0xF4
         public static Instruction CP = new Instruction() {
@@ -1588,6 +1603,21 @@ namespace Emu8080
             }
         };
 
+        // EI - Enable Interrupts
+        // 0xFB
+        public static Instruction EI = new Instruction() {
+            Text = "EI",
+            Execute = (cpu, args) => {
+                cpu.Bus.Interrupt = true;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 4,
+            GetPrintString = (args) => {
+                return "EI";
+            }
+        };
+
         // CM - Call If Minus
         // 0xFC
         public static Instruction CM = new Instruction() {
@@ -1657,13 +1687,13 @@ namespace Emu8080
             { 0xB0, ORA  }, { 0xB1, ORA  }, { 0xB2, ORA  }, { 0xB3, ORA  }, { 0xB4, ORA  }, { 0xB5, ORA  }, { 0xB6, ORA  }, { 0xB7, ORA  },
             { 0xB8, CMP  }, { 0xB9, CMP  }, { 0xBA, CMP  }, { 0xBB, CMP  }, { 0xBC, CMP  }, { 0xBD, CMP  }, { 0xBE, CMP  }, { 0xBF, CMP  },
             { 0xC0, RNZ  }, { 0xC1, POP  }, { 0xC2, JNZ  }, { 0xC3, JMP  }, { 0xC4, CNZ  }, { 0xC5, PUSH }, { 0xC6, ADI  }, { 0xC7, RST  },
-            { 0xC8, RZ   }, { 0xC9, RET  }, { 0xCA, JZ   }, { 0xCC, CZ   }, { 0xCD, CALL }, { 0xCE, ACI  }, { 0xCF, RST  },
+            { 0xC8, RZ   }, { 0xC9, RET  }, { 0xCA, JZ   }, { 0xCB, JMP  }, { 0xCC, CZ   }, { 0xCD, CALL }, { 0xCE, ACI  }, { 0xCF, RST  },
             { 0xD0, RNC  }, { 0xD1, POP  }, { 0xD2, JNC  }, { 0xD4, CNC  }, { 0xD5, PUSH }, { 0xD6, SUI  }, { 0xD7, RST  },
             { 0xD8, RC   }, { 0xD9, RET  }, { 0xDA, JC   }, { 0xDC, CC   }, { 0xDD, CALL }, { 0xDE, SBI  }, { 0xDF, RST  },
             { 0xE0, RPO  }, { 0xE1, POP  }, { 0xE2, JPO  }, { 0xE3, XTHL }, { 0xE4, CPO  }, { 0xE5, PUSH }, { 0xE6, ANI  }, { 0xE7, RST  },
             { 0xE8, RPE  }, { 0xE9, PCHL }, { 0xEA, JPE  }, { 0xEB, XCHG }, { 0xEC, CPE  }, { 0xED, CALL }, { 0xEE, XRI  }, { 0xEF, RST  },
-            { 0xF0, RP   }, { 0xF1, POP  }, { 0xF2, JP   }, { 0xF4, CP   }, { 0xF5, PUSH }, { 0xF6, ORI  }, { 0xF7, RST  },
-            { 0xF8, RM   }, { 0xF9, SPHL }, { 0xFA, JM   }, { 0xFC, CM   }, { 0xFD, CALL }, { 0xFE, CPI  }, { 0xFF, RST  },
+            { 0xF0, RP   }, { 0xF1, POP  }, { 0xF2, JP   }, { 0xFB, DI   }, { 0xF4, CP   }, { 0xF5, PUSH }, { 0xF6, ORI  }, { 0xF7, RST  },
+            { 0xF8, RM   }, { 0xF9, SPHL }, { 0xFA, JM   }, { 0xFB, EI   }, { 0xFC, CM   }, { 0xFD, CALL }, { 0xFE, CPI  }, { 0xFF, RST  },
         };
     }
 }
