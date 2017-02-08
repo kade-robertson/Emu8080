@@ -7,7 +7,7 @@ namespace Emu8080
     public static class InstructionSet {
 
         // NOP - No Operation
-        // 0x00
+        // 0x00 (0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38)
         public static Instruction NOP = new Instruction() {
             Text = "NOP",
             Execute = (mem, args, reg, flag) => { return true; },
@@ -15,6 +15,37 @@ namespace Emu8080
             Cycles = 4,
             GetPrintString = (args) => {
                 return "NOP";
+            }
+        };
+
+        // LXI - Load Register Pair Immediate
+        // 0x01, 0x11, 0x21, 0x31
+        public static Instruction LXI = new Instruction() {
+            Text = "",
+            Execute = (mem, args, reg, flag) => {
+                switch ((args[0] >> 4) & 0x3) {
+                    case 0:
+                        reg.B = args[2];
+                        reg.C = args[1];
+                        break;
+                    case 1:
+                        reg.D = args[2];
+                        reg.E = args[1];
+                        break;
+                    case 2:
+                        reg.H = args[2];
+                        reg.L = args[1];
+                        break;
+                    case 3:
+                        reg.SP = (ushort)((args[2] << 8) | args[1]);
+                        break;
+                }
+                return true;
+            },
+            Arity = 3,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"LXI    {Utils.RegisterPairFromBinary((byte)((args[0] >> 4) & 0x3), "SP")},#${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
         };
 
@@ -55,6 +86,31 @@ namespace Emu8080
             Cycles = 5,
             GetPrintString = (args) => {
                 return $"INX    {Utils.RegisterPairFromBinary((byte)((args[0] >> 4) & 0xF), "SP")}";
+            }
+        };
+
+        // MVI - Move Immediate Data
+        // 0x06, 0x0E, 0x16, 0x1E, 0x26, 0x2E, 0x36, 0x3E
+        public static Instruction MVI = new Instruction() {
+            Text = "MVI",
+            Execute = (mem, args, reg, flag) => {
+                switch ((args[0] >> 3) & 0x7) {
+                    case 0: reg.B = args[1]; break;
+                    case 1: reg.C = args[1]; break;
+                    case 2: reg.D = args[1]; break;
+                    case 3: reg.E = args[1]; break;
+                    case 4: reg.H = args[1]; break;
+                    case 5: reg.L = args[1]; break;
+                    case 6: mem[reg.HL] = args[1]; return true;
+                    case 7: reg.A = args[1]; break;
+                }
+                return false;
+            },
+            Arity = 2,
+            Cycles = 10,
+            LowCycles = 7,
+            GetPrintString = (args) => {
+                return $"MVI    {Utils.RegisterFromBinary((byte)((args[0] >> 3) & 0x7))},#${args[1].ToString("X2")}";
             }
         };
 
@@ -733,6 +789,26 @@ namespace Emu8080
             }
         };
 
+        // RNZ - Return If Not Zero
+        // 0xC0
+        public static Instruction RNZ = new Instruction() {
+            Text = "RNZ",
+            Execute = (mem, args, reg, flag) => {
+                if (!flag.Zero) {
+                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                    reg.SP += 2;
+                    return true;
+                }
+                return false;
+            },
+            Arity = 1,
+            Cycles = 11,
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return "RNZ";
+            }
+        };
+
         // POP - Pop Data Off Stack
         // 0xC1, 0xD1, 0xE1, 0xF1
         public static Instruction POP = new Instruction() {
@@ -808,11 +884,13 @@ namespace Emu8080
                     mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
                     reg.SP -= 2;
                     reg.PC = (ushort)((args[2] << 8) | args[1]);
+                    return true;
                 }
-                return true;
+                return false;
             },
             Arity = 3,
             Cycles = 17,
+            LowCycles = 11,
             GetPrintString = (args) => {
                 return $"CNZ    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
@@ -872,6 +950,42 @@ namespace Emu8080
             }
         };
 
+        // RZ - Return If Zero
+        // 0xC8
+        public static Instruction RZ = new Instruction() {
+            Text = "RZ",
+            Execute = (mem, args, reg, flag) => {
+                if (flag.Zero) {
+                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                    reg.SP += 2;
+                    return true;
+                }
+                return false;
+            },
+            Arity = 1,
+            Cycles = 11,
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return "RZ";
+            }
+        };
+
+        // RET - Return
+        // 0xC9 (0xD9)
+        public static Instruction RET = new Instruction() {
+            Text = "RET",
+            Execute = (mem, args, reg, flag) => {
+                reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                reg.SP += 2;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return "RET";
+            }
+        };
+
         // JZ - Jump If Zero
         // 0xCA
         public static Instruction JZ = new Instruction() {
@@ -899,18 +1013,20 @@ namespace Emu8080
                     mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
                     reg.SP -= 2;
                     reg.PC = (ushort)((args[2] << 8) | args[1]);
+                    return true;
                 }
-                return true;
+                return false;
             },
             Arity = 3,
             Cycles = 17,
+            LowCycles = 11,
             GetPrintString = (args) => {
                 return $"CZ     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
         };
 
         // CALL - Call Subroutine
-        // 0xCC
+        // 0xCD (0xDD, 0xED, 0xFD)
         public static Instruction CALL = new Instruction() {
             Text = "CALL",
             Execute = (mem, args, reg, flag) => {
@@ -949,6 +1065,26 @@ namespace Emu8080
             }
         };
 
+        // RNC - Return If No Carry
+        // 0xD0
+        public static Instruction RNC = new Instruction() {
+            Text = "RNC",
+            Execute = (mem, args, reg, flag) => {
+                if (!flag.Carry) {
+                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                    reg.SP += 2;
+                    return true;
+                }
+                return false;
+            },
+            Arity = 1,
+            Cycles = 11,
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return "RNC";
+            }
+        };
+
         // JNC - Jump If No Carry
         // 0xD2
         public static Instruction JNC = new Instruction() {
@@ -976,11 +1112,13 @@ namespace Emu8080
                     mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
                     reg.SP -= 2;
                     reg.PC = (ushort)((args[2] << 8) | args[1]);
+                    return true;
                 }
-                return true;
+                return false;
             },
             Arity = 3,
             Cycles = 17,
+            LowCycles = 11,
             GetPrintString = (args) => {
                 return $"CNC    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
@@ -1005,6 +1143,26 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 return $"SUI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // RC - Return If Carry
+        // 0xD8
+        public static Instruction RC = new Instruction() {
+            Text = "RC",
+            Execute = (mem, args, reg, flag) => {
+                if (flag.Carry) {
+                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                    reg.SP += 2;
+                    return true;
+                }
+                return false;
+            },
+            Arity = 1,
+            Cycles = 11,
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return "RC";
             }
         };
 
@@ -1035,11 +1193,13 @@ namespace Emu8080
                     mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
                     reg.SP -= 2;
                     reg.PC = (ushort)((args[2] << 8) | args[1]);
+                    return true;
                 }
-                return true;
+                return false;
             },
             Arity = 3,
             Cycles = 17,
+            LowCycles = 11,
             GetPrintString = (args) => {
                 return $"CC     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
@@ -1065,6 +1225,26 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 return $"SBI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // RPO - Return If Parity Odd
+        // 0xE0
+        public static Instruction RPO = new Instruction() {
+            Text = "RPO",
+            Execute = (mem, args, reg, flag) => {
+                if (!flag.Parity) {
+                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                    reg.SP += 2;
+                    return true;
+                }
+                return false;
+            },
+            Arity = 1,
+            Cycles = 11,
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return "RPO";
             }
         };
 
@@ -1115,11 +1295,13 @@ namespace Emu8080
                     mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
                     reg.SP -= 2;
                     reg.PC = (ushort)((args[2] << 8) | args[1]);
+                    return true;
                 }
-                return true;
+                return false;
             },
             Arity = 3,
             Cycles = 17,
+            LowCycles = 11,
             GetPrintString = (args) => {
                 return $"CPO    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
@@ -1143,6 +1325,26 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 return $"ANI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // RPE - Return If Parity Even
+        // 0xE8
+        public static Instruction RPE = new Instruction() {
+            Text = "RPE",
+            Execute = (mem, args, reg, flag) => {
+                if (flag.Parity) {
+                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                    reg.SP += 2;
+                    return true;
+                }
+                return false;
+            },
+            Arity = 1,
+            Cycles = 11,
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return "RPE";
             }
         };
 
@@ -1190,11 +1392,13 @@ namespace Emu8080
                     mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
                     reg.SP -= 2;
                     reg.PC = (ushort)((args[2] << 8) | args[1]);
+                    return true;
                 }
-                return true;
+                return false;
             },
             Arity = 3,
             Cycles = 17,
+            LowCycles = 11,
             GetPrintString = (args) => {
                 return $"CPE    ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
@@ -1236,6 +1440,26 @@ namespace Emu8080
             }
         };
 
+        // RP - Return If Positive
+        // 0xF0
+        public static Instruction RP = new Instruction() {
+            Text = "RP",
+            Execute = (mem, args, reg, flag) => {
+                if (!flag.Sign) {
+                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                    reg.SP += 2;
+                    return true;
+                }
+                return false;
+            },
+            Arity = 1,
+            Cycles = 11,
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return "RP";
+            }
+        };
+
         // JP - Jump If Positive
         // 0xF2
         public static Instruction JP = new Instruction() {
@@ -1263,11 +1487,13 @@ namespace Emu8080
                     mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
                     reg.SP -= 2;
                     reg.PC = (ushort)((args[2] << 8) | args[1]);
+                    return true;
                 }
-                return true;
+                return false;
             },
             Arity = 3,
             Cycles = 17,
+            LowCycles = 11,
             GetPrintString = (args) => {
                 return $"CP     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
@@ -1291,6 +1517,26 @@ namespace Emu8080
             Cycles = 7,
             GetPrintString = (args) => {
                 return $"ORI    #${args[1].ToString("X2")}";
+            }
+        };
+
+        // RM - Return If Minus
+        // 0xF8
+        public static Instruction RM = new Instruction() {
+            Text = "RM",
+            Execute = (mem, args, reg, flag) => {
+                if (flag.Sign) {
+                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
+                    reg.SP += 2;
+                    return true;
+                }
+                return false;
+            },
+            Arity = 1,
+            Cycles = 11,
+            LowCycles = 5,
+            GetPrintString = (args) => {
+                return "RM";
             }
         };
 
@@ -1336,11 +1582,13 @@ namespace Emu8080
                     mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
                     reg.SP -= 2;
                     reg.PC = (ushort)((args[2] << 8) | args[1]);
+                    return true;
                 }
-                return true;
+                return false;
             },
             Arity = 3,
             Cycles = 17,
+            LowCycles = 11,
             GetPrintString = (args) => {
                 return $"CM     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
             }
@@ -1368,14 +1616,14 @@ namespace Emu8080
         };
 
         public static Dictionary<byte, Instruction> Instructions = new Dictionary<byte, Instruction>() {
-            { 0x00, NOP  }, { 0x02, STAX }, { 0x03, INX  }, { 0x04, INR  }, { 0x05, DCR  }, { 0x07, RLC  },
-            { 0x09, DAD  }, { 0x0A, LDAX }, { 0x0B, DCX  }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0F, RRC  },
-            { 0x12, STAX }, { 0x13, INX  }, { 0x14, INR  }, { 0x15, DCR  }, { 0x17, RAL  },
-            { 0x19, DAD  }, { 0x1A, LDAX }, { 0x1B, DCX  }, { 0x1C, INR  }, { 0x1D, DCR  }, { 0x1F, RAR  },
-            { 0x22, SHLD }, { 0x23, INX  }, { 0x24, INR  }, { 0x25, DCR  }, { 0x27, DAA  },
-            { 0x29, DAD  }, { 0x2A, LHLD }, { 0x2B, DCX  }, { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2F, CMA  },
-            { 0x32, STA  }, { 0x33, INX  }, { 0x34, INR  }, { 0x35, DCR  }, { 0x37, STC  },
-            { 0x39, DAD  }, { 0x3A, LDA  }, { 0x3B, DCX  }, { 0x3C, INR  }, { 0x3D, DCR  }, { 0x3F, CMC  },
+            { 0x00, NOP  }, { 0x01, LXI  }, { 0x02, STAX }, { 0x03, INX  }, { 0x04, INR  }, { 0x05, DCR  }, { 0x06, MVI  }, { 0x07, RLC  },
+            { 0x08, NOP  }, { 0x09, DAD  }, { 0x0A, LDAX }, { 0x0B, DCX  }, { 0x0C, INR  }, { 0x0D, DCR  }, { 0x0E, MVI  }, { 0x0F, RRC  },
+            { 0x10, NOP  }, { 0x11, LXI  }, { 0x12, STAX }, { 0x13, INX  }, { 0x14, INR  }, { 0x15, DCR  }, { 0x16, MVI  }, { 0x17, RAL  },
+            { 0x18, NOP  }, { 0x19, DAD  }, { 0x1A, LDAX }, { 0x1B, DCX  }, { 0x1C, INR  }, { 0x1D, DCR  }, { 0x1E, MVI  }, { 0x1F, RAR  },
+            { 0x20, NOP  }, { 0x21, LXI  }, { 0x22, SHLD }, { 0x23, INX  }, { 0x24, INR  }, { 0x25, DCR  }, { 0x26, MVI  }, { 0x27, DAA  },
+            { 0x28, NOP  }, { 0x29, DAD  }, { 0x2A, LHLD }, { 0x2B, DCX  }, { 0x2C, INR  }, { 0x2D, DCR  }, { 0x2E, MVI  }, { 0x2F, CMA  },
+            { 0x30, NOP  }, { 0x31, LXI  }, { 0x32, STA  }, { 0x33, INX  }, { 0x34, INR  }, { 0x35, DCR  }, { 0x36, MVI  }, { 0x37, STC  },
+            { 0x38, NOP  }, { 0x39, DAD  }, { 0x3A, LDA  }, { 0x3B, DCX  }, { 0x3C, INR  }, { 0x3D, DCR  }, { 0x3E, MVI  }, { 0x3F, CMC  },
             { 0x40, MOV  }, { 0x41, MOV  }, { 0x42, MOV  }, { 0x43, MOV  }, { 0x44, MOV  }, { 0x45, MOV  }, { 0x46, MOV  }, { 0x47, MOV  },
             { 0x48, MOV  }, { 0x49, MOV  }, { 0x4A, MOV  }, { 0x4B, MOV  }, { 0x4C, MOV  }, { 0x4D, MOV  }, { 0x4E, MOV  }, { 0x4F, MOV  },
             { 0x50, MOV  }, { 0x51, MOV  }, { 0x52, MOV  }, { 0x53, MOV  }, { 0x54, MOV  }, { 0x55, MOV  }, { 0x56, MOV  }, { 0x57, MOV  },
@@ -1392,14 +1640,14 @@ namespace Emu8080
             { 0xA8, XRA  }, { 0xA9, XRA  }, { 0xAA, XRA  }, { 0xAB, XRA  }, { 0xAC, XRA  }, { 0xAD, XRA  }, { 0xAE, XRA  }, { 0xAF, XRA  },
             { 0xB0, ORA  }, { 0xB1, ORA  }, { 0xB2, ORA  }, { 0xB3, ORA  }, { 0xB4, ORA  }, { 0xB5, ORA  }, { 0xB6, ORA  }, { 0xB7, ORA  },
             { 0xB8, CMP  }, { 0xB9, CMP  }, { 0xBA, CMP  }, { 0xBB, CMP  }, { 0xBC, CMP  }, { 0xBD, CMP  }, { 0xBE, CMP  }, { 0xBF, CMP  },
-            { 0xC1, POP  }, { 0xC2, JNZ  }, { 0xC3, JMP  }, { 0xC4, CNZ  }, { 0xC5, PUSH }, { 0xC6, ADI  },
-            { 0xCA, JZ   }, { 0xCC, CZ   }, { 0xCD, CALL }, { 0xCE, ACI  },
-            { 0xD1, POP  }, { 0xD2, JNC  }, { 0xD4, CNC  }, { 0xD5, PUSH }, { 0xD6, SUI  },
-            { 0xDA, JC   }, { 0xDC, CC   }, { 0xDE, SBI  },
-            { 0xE1, POP  }, { 0xE2, JPO  }, { 0xE3, XTHL }, { 0xE4, CPO  }, { 0xE5, PUSH }, { 0xE6, ANI  },
-            { 0xE9, PCHL }, { 0xEA, JPE  }, { 0xEC, CPE  }, { 0xEB, XCHG }, { 0xEE, XRI  },
-            { 0xF1, POP  }, { 0xF2, JP   }, { 0xF4, CP   }, { 0xF5, PUSH }, { 0xF6, ORI  },
-            { 0xF9, SPHL }, { 0xFA, JM   }, { 0xFC, CM   }, { 0xFE, CPI  },
+            { 0xC0, RNZ  }, { 0xC1, POP  }, { 0xC2, JNZ  }, { 0xC3, JMP  }, { 0xC4, CNZ  }, { 0xC5, PUSH }, { 0xC6, ADI  },
+            { 0xC8, RZ   }, { 0xC9, RET  }, { 0xCA, JZ   }, { 0xCC, CZ   }, { 0xCD, CALL }, { 0xCE, ACI  },
+            { 0xD0, RNC  }, { 0xD1, POP  }, { 0xD2, JNC  }, { 0xD4, CNC  }, { 0xD5, PUSH }, { 0xD6, SUI  },
+            { 0xD8, RC   }, { 0xD9, RET  }, { 0xDA, JC   }, { 0xDC, CC   }, { 0xDD, CALL }, { 0xDE, SBI  },
+            { 0xE0, RPO  }, { 0xE1, POP  }, { 0xE2, JPO  }, { 0xE3, XTHL }, { 0xE4, CPO  }, { 0xE5, PUSH }, { 0xE6, ANI  },
+            { 0xE8, RPE  }, { 0xE9, PCHL }, { 0xEA, JPE  }, { 0xEB, XCHG }, { 0xEC, CPE  }, { 0xED, CALL }, { 0xEE, XRI  },
+            { 0xF0, RP   }, { 0xF1, POP  }, { 0xF2, JP   }, { 0xF4, CP   }, { 0xF5, PUSH }, { 0xF6, ORI  },
+            { 0xF8, RM   }, { 0xF9, SPHL }, { 0xFA, JM   }, { 0xFC, CM   }, { 0xFD, CALL }, { 0xFE, CPI  },
         };
     }
 }

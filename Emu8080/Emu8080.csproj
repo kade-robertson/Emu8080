@@ -44,11 +44,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CPU.cs" />
-    <Compile Include="CPUFlag.cs" />
-    <Compile Include="Instruction.cs" />
+    <Compile Include="Objects\CPUFlag.cs" />
+    <Compile Include="Objects\Instruction.cs" />
     <Compile Include="InstructionSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="CPURegisters.cs" />
+    <Compile Include="Objects\CPURegisters.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
