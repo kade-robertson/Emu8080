@@ -10,7 +10,7 @@ namespace Emu8080
         // 0x00 (0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38)
         public static Instruction NOP = new Instruction() {
             Text = "NOP",
-            Execute = (mem, args, reg, flag) => { return true; },
+            Execute = (cpu, args) => { return true; },
             Arity = 1,
             Cycles = 4,
             GetPrintString = (args) => {
@@ -22,22 +22,22 @@ namespace Emu8080
         // 0x01, 0x11, 0x21, 0x31
         public static Instruction LXI = new Instruction() {
             Text = "",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 switch ((args[0] >> 4) & 0x3) {
                     case 0:
-                        reg.B = args[2];
-                        reg.C = args[1];
+                        cpu.Registers.B = args[2];
+                        cpu.Registers.C = args[1];
                         break;
                     case 1:
-                        reg.D = args[2];
-                        reg.E = args[1];
+                        cpu.Registers.D = args[2];
+                        cpu.Registers.E = args[1];
                         break;
                     case 2:
-                        reg.H = args[2];
-                        reg.L = args[1];
+                        cpu.Registers.H = args[2];
+                        cpu.Registers.L = args[1];
                         break;
                     case 3:
-                        reg.SP = (ushort)((args[2] << 8) | args[1]);
+                        cpu.Registers.SP = (ushort)((args[2] << 8) | args[1]);
                         break;
                 }
                 return true;
@@ -53,13 +53,13 @@ namespace Emu8080
         // 0x02, 0x12
         public static Instruction STAX = new Instruction() {
             Text = "STAX",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var oreg = 0;
                 switch (args[0] & 0x10) {
-                    case 0x00: oreg = reg.BC; break;
-                    case 0x10: oreg = reg.DE; break;
+                    case 0x00: oreg = cpu.Registers.BC; break;
+                    case 0x10: oreg = cpu.Registers.DE; break;
                 }
-                mem[oreg] = reg.A;
+                cpu.Memory[oreg] = cpu.Registers.A;
                 return true;
             },
             Arity = 1,
@@ -74,12 +74,12 @@ namespace Emu8080
         // 0x03, 0x13, 0x23, 0x33
         public static Instruction INX = new Instruction() {
             Text = "INX",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 switch ((args[0] >> 4) & 0xF) {
-                    case 0: reg.BC++; break;
-                    case 1: reg.DE++; break;
-                    case 2: reg.HL++; break;
-                    case 3: reg.SP = (ushort)((reg.SP + 1) & 0xFFFF); break;
+                    case 0: cpu.Registers.BC++; break;
+                    case 1: cpu.Registers.DE++; break;
+                    case 2: cpu.Registers.HL++; break;
+                    case 3: cpu.Registers.SP = (ushort)((cpu.Registers.SP + 1) & 0xFFFF); break;
                 }
                 return true;
             },
@@ -93,16 +93,16 @@ namespace Emu8080
         // 0x06, 0x0E, 0x16, 0x1E, 0x26, 0x2E, 0x36, 0x3E
         public static Instruction MVI = new Instruction() {
             Text = "MVI",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 switch ((args[0] >> 3) & 0x7) {
-                    case 0: reg.B = args[1]; break;
-                    case 1: reg.C = args[1]; break;
-                    case 2: reg.D = args[1]; break;
-                    case 3: reg.E = args[1]; break;
-                    case 4: reg.H = args[1]; break;
-                    case 5: reg.L = args[1]; break;
-                    case 6: mem[reg.HL] = args[1]; return true;
-                    case 7: reg.A = args[1]; break;
+                    case 0: cpu.Registers.B = args[1]; break;
+                    case 1: cpu.Registers.C = args[1]; break;
+                    case 2: cpu.Registers.D = args[1]; break;
+                    case 3: cpu.Registers.E = args[1]; break;
+                    case 4: cpu.Registers.H = args[1]; break;
+                    case 5: cpu.Registers.L = args[1]; break;
+                    case 6: cpu.Memory[cpu.Registers.HL] = args[1]; return true;
+                    case 7: cpu.Registers.A = args[1]; break;
                 }
                 return false;
             },
@@ -118,10 +118,10 @@ namespace Emu8080
         // 0x07
         public static Instruction RLC = new Instruction() {
             Text = "RLC",
-            Execute = (mem, args, reg, flag) => {
-                var hob = (reg.A >> 7);
-                flag.Carry = hob == 1;
-                reg.A = (byte)(((reg.A << 1) & 0xFF) | hob);
+            Execute = (cpu, args) => {
+                var hob = (cpu.Registers.A >> 7);
+                cpu.Flag.Carry = hob == 1;
+                cpu.Registers.A = (byte)(((cpu.Registers.A << 1) & 0xFF) | hob);
                 return true;
             },
             Arity = 1,
@@ -135,18 +135,18 @@ namespace Emu8080
         // 0x09, 0x19, 0x29, 0x39
         public static Instruction DAD = new Instruction() {
             Text = "DAD",
-            Execute = (mem, args, reg, flag) => {
-                var result = (int)reg.HL;
+            Execute = (cpu, args) => {
+                var result = (int)cpu.Registers.HL;
                 var oreg = (ushort)0;
                 switch ((args[0] >> 4) & 0xF) {
-                    case 0: oreg = reg.BC; break;
-                    case 1: oreg = reg.DE; break;
-                    case 2: oreg = reg.HL; break;
-                    case 3: oreg = reg.SP; break;
+                    case 0: oreg = cpu.Registers.BC; break;
+                    case 1: oreg = cpu.Registers.DE; break;
+                    case 2: oreg = cpu.Registers.HL; break;
+                    case 3: oreg = cpu.Registers.SP; break;
                 }
-                result = reg.HL + oreg;
-                flag.Carry = (result > 0xFFFF);
-                reg.HL = (ushort)(result & 0xFFFF);
+                result = cpu.Registers.HL + oreg;
+                cpu.Flag.Carry = (result > 0xFFFF);
+                cpu.Registers.HL = (ushort)(result & 0xFFFF);
                 return true;
             },
             Arity = 1,
@@ -160,13 +160,13 @@ namespace Emu8080
         // 0x0A, 0x1A
         public static Instruction LDAX = new Instruction() {
             Text = "LDAX",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var oreg = 0;
                 switch (args[0] & 0x10) {
-                    case 0x00: oreg = reg.BC; break;
-                    case 0x10: oreg = reg.DE; break;
+                    case 0x00: oreg = cpu.Registers.BC; break;
+                    case 0x10: oreg = cpu.Registers.DE; break;
                 }
-                reg.A = mem[oreg];
+                cpu.Registers.A = cpu.Memory[oreg];
                 return true;
             },
             Arity = 1,
@@ -181,12 +181,12 @@ namespace Emu8080
         // 0x0B, 0x1B, 0x2B, 0x3B
         public static Instruction DCX = new Instruction() {
             Text = "DCX",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 switch ((args[0] >> 4) & 0xF) {
-                    case 0: reg.BC--; break;
-                    case 1: reg.DE--; break;
-                    case 2: reg.HL--; break;
-                    case 3: reg.SP = (ushort)((reg.SP - 1) & 0xFFFF); break;
+                    case 0: cpu.Registers.BC--; break;
+                    case 1: cpu.Registers.DE--; break;
+                    case 2: cpu.Registers.HL--; break;
+                    case 3: cpu.Registers.SP = (ushort)((cpu.Registers.SP - 1) & 0xFFFF); break;
                 }
                 return true;
             },
@@ -200,10 +200,10 @@ namespace Emu8080
         // 0x0F
         public static Instruction RRC = new Instruction() {
             Text = "RRC",
-            Execute = (mem, args, reg, flag) => {
-                var lob = (reg.A & 0x1);
-                flag.Carry = lob == 1;
-                reg.A = (byte)((reg.A >> 1) | (lob << 7));
+            Execute = (cpu, args) => {
+                var lob = (cpu.Registers.A & 0x1);
+                cpu.Flag.Carry = lob == 1;
+                cpu.Registers.A = (byte)((cpu.Registers.A >> 1) | (lob << 7));
                 return true;
             },
             Arity = 1,
@@ -217,10 +217,10 @@ namespace Emu8080
         // 0x17
         public static Instruction RAL = new Instruction() {
             Text = "RAL",
-            Execute = (mem, args, reg, flag) => {
-                var hob = (reg.A >> 7);
-                reg.A = (byte)(((reg.A << 1) & 0xFF) | (flag.Carry ? 1 : 0));
-                flag.Carry = hob == 1;
+            Execute = (cpu, args) => {
+                var hob = (cpu.Registers.A >> 7);
+                cpu.Registers.A = (byte)(((cpu.Registers.A << 1) & 0xFF) | (cpu.Flag.Carry ? 1 : 0));
+                cpu.Flag.Carry = hob == 1;
                 return true;
             },
             Arity = 1,
@@ -234,10 +234,10 @@ namespace Emu8080
         // 0x1F
         public static Instruction RAR = new Instruction() {
             Text = "RAR",
-            Execute = (mem, args, reg, flag) => {
-                var lob = (reg.A & 0x1);
-                reg.A = (byte)((reg.A >> 1) | (flag.Carry ? 0x80 : 0));
-                flag.Carry = lob == 1;
+            Execute = (cpu, args) => {
+                var lob = (cpu.Registers.A & 0x1);
+                cpu.Registers.A = (byte)((cpu.Registers.A >> 1) | (cpu.Flag.Carry ? 0x80 : 0));
+                cpu.Flag.Carry = lob == 1;
                 return true;
             },
             Arity = 1,
@@ -251,10 +251,10 @@ namespace Emu8080
         // 0x22
         public static Instruction SHLD = new Instruction() {
             Text = "SHLD",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var addr = (args[2] << 8) | args[1];
-                mem[addr] = reg.L;
-                mem[addr + 1] = reg.H;
+                cpu.Memory[addr] = cpu.Registers.L;
+                cpu.Memory[addr + 1] = cpu.Registers.H;
                 return true;
             },
             Arity = 3,
@@ -268,23 +268,23 @@ namespace Emu8080
         // 0x27
         public static Instruction DAA = new Instruction() {
             Text = "DAA",
-            Execute = (mem, args, reg, flag) => {
-                var low = reg.A & 0xF;
-                var result = reg.A;
-                if (low > 9 || flag.AuxCarry) {
+            Execute = (cpu, args) => {
+                var low = cpu.Registers.A & 0xF;
+                var result = cpu.Registers.A;
+                if (low > 9 || cpu.Flag.AuxCarry) {
                     result += 6;
-                    flag.AuxCarry = true;
+                    cpu.Flag.AuxCarry = true;
                 }
                 var high = result >> 4;
-                if (high > 9 || flag.Carry) {
+                if (high > 9 || cpu.Flag.Carry) {
                     result += 6 << 4;
-                    flag.Carry = true;
+                    cpu.Flag.Carry = true;
                 }
                 result = (byte)(result & 0xFF);
-                flag.Sign = (result & 0x80) != 0;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                reg.A = result;
+                cpu.Flag.Sign = (result & 0x80) != 0;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Registers.A = result;
                 return true;
             },
             Arity = 1,
@@ -298,10 +298,10 @@ namespace Emu8080
         // 0x2A
         public static Instruction LHLD = new Instruction() {
             Text = "LHLD",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var addr = (args[2] << 8) | args[1];
-                reg.L = mem[addr];
-                reg.H = mem[addr + 1];
+                cpu.Registers.L = cpu.Memory[addr];
+                cpu.Registers.H = cpu.Memory[addr + 1];
                 return true;
             },
             Arity = 3,
@@ -315,9 +315,9 @@ namespace Emu8080
         // 0x2F
         public static Instruction CMA = new Instruction() {
             Text = "CMA",
-            Execute = (mem, args, reg, flag) => {
-                var result = (byte)(~reg.A & 0xFF);
-                reg.A = result;
+            Execute = (cpu, args) => {
+                var result = (byte)(~cpu.Registers.A & 0xFF);
+                cpu.Registers.A = result;
                 return true;
             },
             Arity = 1,
@@ -331,9 +331,9 @@ namespace Emu8080
         // 0x32
         public static Instruction STA = new Instruction() {
             Text = "STA",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var addr = (args[2] << 8) | args[1];
-                mem[addr] = reg.A;
+                cpu.Memory[addr] = cpu.Registers.A;
                 return true;
             },
             Arity = 3,
@@ -347,7 +347,7 @@ namespace Emu8080
         // 0x37
         public static Instruction STC = new Instruction() {
             Text = "STC",
-            Execute = (mem, args, reg, flag) => { flag.Carry = true; return true; },
+            Execute = (cpu, args) => { cpu.Flag.Carry = true; return true; },
             Arity = 1,
             Cycles = 4,
             GetPrintString = (args) => {
@@ -359,9 +359,9 @@ namespace Emu8080
         // 0x3A
         public static Instruction LDA = new Instruction() {
             Text = "LDA",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var addr = (args[2] << 8) | args[1];
-                reg.A = mem[addr];
+                cpu.Registers.A = cpu.Memory[addr];
                 return true;
             },
             Arity = 3,
@@ -375,7 +375,7 @@ namespace Emu8080
         // 0x3F
         public static Instruction CMC = new Instruction() {
             Text = "CMC",
-            Execute = (mem, args, reg, flag) => { flag.Carry = !flag.Carry; return true; },
+            Execute = (cpu, args) => { cpu.Flag.Carry = !cpu.Flag.Carry; return true; },
             Arity = 1,
             Cycles = 4,
             GetPrintString = (args) => {
@@ -387,33 +387,33 @@ namespace Emu8080
         // 0x04, 0x0C, 0x14, 0x1C, 0x24, 0x2C, 0x34, 0x3C
         public static Instruction INR = new Instruction() {
             Text = "INR",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 byte toinc = 0;
                 var retval = false;
                 switch ((args[0] & 0x3F) >> 3) {
-                    case 0: toinc = reg.B; break;
-                    case 1: toinc = reg.C; break;
-                    case 2: toinc = reg.D; break;
-                    case 3: toinc = reg.E; break;
-                    case 4: toinc = reg.H; break;
-                    case 5: toinc = reg.L; break;
-                    case 6: toinc = mem[reg.HL]; retval = true; break;
-                    case 7: toinc = reg.A; break;
+                    case 0: toinc = cpu.Registers.B; break;
+                    case 1: toinc = cpu.Registers.C; break;
+                    case 2: toinc = cpu.Registers.D; break;
+                    case 3: toinc = cpu.Registers.E; break;
+                    case 4: toinc = cpu.Registers.H; break;
+                    case 5: toinc = cpu.Registers.L; break;
+                    case 6: toinc = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: toinc = cpu.Registers.A; break;
                 }
                 toinc = (byte)((toinc + 1) & 0xFF);
-                flag.Sign = (toinc & 0x80) != 0;
-                flag.Zero = (toinc == 0);
-                flag.Parity = Utils.ParityTable[toinc] == 1;
-                flag.AuxCarry = (toinc & 0xF) != 0xF;
+                cpu.Flag.Sign = (toinc & 0x80) != 0;
+                cpu.Flag.Zero = (toinc == 0);
+                cpu.Flag.Parity = Utils.ParityTable[toinc] == 1;
+                cpu.Flag.AuxCarry = (toinc & 0xF) != 0xF;
                 switch ((args[0] & 0x3F) >> 3) {
-                    case 0: reg.B = toinc; break;
-                    case 1: reg.C = toinc; break;
-                    case 2: reg.D = toinc; break;
-                    case 3: reg.E = toinc; break;
-                    case 4: reg.H = toinc; break;
-                    case 5: reg.L = toinc; break;
-                    case 6: mem[reg.HL] = toinc; break;
-                    case 7: reg.A = toinc; break;
+                    case 0: cpu.Registers.B = toinc; break;
+                    case 1: cpu.Registers.C = toinc; break;
+                    case 2: cpu.Registers.D = toinc; break;
+                    case 3: cpu.Registers.E = toinc; break;
+                    case 4: cpu.Registers.H = toinc; break;
+                    case 5: cpu.Registers.L = toinc; break;
+                    case 6: cpu.Memory[cpu.Registers.HL] = toinc; break;
+                    case 7: cpu.Registers.A = toinc; break;
                 }
                 return retval;
             },
@@ -429,33 +429,33 @@ namespace Emu8080
         // 0x05, 0x0D, 0x15, 0x1D, 0x25, 0x2D, 0x35, 0x3D
         public static Instruction DCR = new Instruction() {
             Text = "DCR",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 byte toinc = 0;
                 var retval = false;
                 switch ((args[0] & 0x3F) >> 3) {
-                    case 0: toinc = reg.B; break;
-                    case 1: toinc = reg.C; break;
-                    case 2: toinc = reg.D; break;
-                    case 3: toinc = reg.E; break;
-                    case 4: toinc = reg.H; break;
-                    case 5: toinc = reg.L; break;
-                    case 6: toinc = mem[reg.HL]; retval = true; break;
-                    case 7: toinc = reg.A; break;
+                    case 0: toinc = cpu.Registers.B; break;
+                    case 1: toinc = cpu.Registers.C; break;
+                    case 2: toinc = cpu.Registers.D; break;
+                    case 3: toinc = cpu.Registers.E; break;
+                    case 4: toinc = cpu.Registers.H; break;
+                    case 5: toinc = cpu.Registers.L; break;
+                    case 6: toinc = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: toinc = cpu.Registers.A; break;
                 }
                 toinc = (byte)((toinc - 1) & 0xFF);
-                flag.Sign = (toinc & 0x80) != 0;
-                flag.Zero = (toinc == 0);
-                flag.Parity = Utils.ParityTable[toinc] == 1;
-                flag.AuxCarry = (toinc & 0xF) != 0xF;
+                cpu.Flag.Sign = (toinc & 0x80) != 0;
+                cpu.Flag.Zero = (toinc == 0);
+                cpu.Flag.Parity = Utils.ParityTable[toinc] == 1;
+                cpu.Flag.AuxCarry = (toinc & 0xF) != 0xF;
                 switch ((args[0] & 0x3F) >> 3) {
-                    case 0: reg.B = toinc; break;
-                    case 1: reg.C = toinc; break;
-                    case 2: reg.D = toinc; break;
-                    case 3: reg.E = toinc; break;
-                    case 4: reg.H = toinc; break;
-                    case 5: reg.L = toinc; break;
-                    case 6: mem[reg.HL] = toinc; break;
-                    case 7: reg.A = toinc; break;
+                    case 0: cpu.Registers.B = toinc; break;
+                    case 1: cpu.Registers.C = toinc; break;
+                    case 2: cpu.Registers.D = toinc; break;
+                    case 3: cpu.Registers.E = toinc; break;
+                    case 4: cpu.Registers.H = toinc; break;
+                    case 5: cpu.Registers.L = toinc; break;
+                    case 6: cpu.Memory[cpu.Registers.HL] = toinc; break;
+                    case 7: cpu.Registers.A = toinc; break;
                 }
                 return retval;
             },
@@ -478,28 +478,28 @@ namespace Emu8080
         // 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F
         public static Instruction MOV = new Instruction() {
             Text = "MOV",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 byte tomov = 0;
                 var retval = false;
                 switch (args[0] & 0x7) {
-                    case 0: tomov = reg.B; break;
-                    case 1: tomov = reg.C; break;
-                    case 2: tomov = reg.D; break;
-                    case 3: tomov = reg.E; break;
-                    case 4: tomov = reg.H; break;
-                    case 5: tomov = reg.L; break;
-                    case 6: tomov = mem[reg.HL]; retval = true; break;
-                    case 7: tomov = reg.A; break;
+                    case 0: tomov = cpu.Registers.B; break;
+                    case 1: tomov = cpu.Registers.C; break;
+                    case 2: tomov = cpu.Registers.D; break;
+                    case 3: tomov = cpu.Registers.E; break;
+                    case 4: tomov = cpu.Registers.H; break;
+                    case 5: tomov = cpu.Registers.L; break;
+                    case 6: tomov = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: tomov = cpu.Registers.A; break;
                 }
                 switch ((args[0] & 0x3F) >> 3) {
-                    case 0: reg.B = tomov; break;
-                    case 1: reg.C = tomov; break;
-                    case 2: reg.D = tomov; break;
-                    case 3: reg.E = tomov; break;
-                    case 4: reg.H = tomov; break;
-                    case 5: reg.L = tomov; break;
-                    case 6: mem[reg.HL] = tomov; retval = true; break;
-                    case 7: reg.A = tomov; break;
+                    case 0: cpu.Registers.B = tomov; break;
+                    case 1: cpu.Registers.C = tomov; break;
+                    case 2: cpu.Registers.D = tomov; break;
+                    case 3: cpu.Registers.E = tomov; break;
+                    case 4: cpu.Registers.H = tomov; break;
+                    case 5: cpu.Registers.L = tomov; break;
+                    case 6: cpu.Memory[cpu.Registers.HL] = tomov; retval = true; break;
+                    case 7: cpu.Registers.A = tomov; break;
                 }
                 return retval;
             },
@@ -515,27 +515,27 @@ namespace Emu8080
         // 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87
         public static Instruction ADD = new Instruction() {
             Text = "ADD",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var retval = false;
                 var oreg = (byte)0;
                 switch (args[0] & 0x7) {
-                    case 0: oreg = reg.B; break;
-                    case 1: oreg = reg.C; break;
-                    case 2: oreg = reg.D; break;
-                    case 3: oreg = reg.E; break;
-                    case 4: oreg = reg.H; break;
-                    case 5: oreg = reg.L; break;
-                    case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg = reg.A; break;
+                    case 0: oreg = cpu.Registers.B; break;
+                    case 1: oreg = cpu.Registers.C; break;
+                    case 2: oreg = cpu.Registers.D; break;
+                    case 3: oreg = cpu.Registers.E; break;
+                    case 4: oreg = cpu.Registers.H; break;
+                    case 5: oreg = cpu.Registers.L; break;
+                    case 6: oreg = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: oreg = cpu.Registers.A; break;
                 }
-                var result = reg.A + oreg;
-                flag.Carry = (result > 0xFF);
+                var result = cpu.Registers.A + oreg;
+                cpu.Flag.Carry = (result > 0xFF);
                 result = (byte)(result & 0xFF);
-                flag.Zero = (result == 0);
-                flag.Sign = (result >> 7) == 1;
-                flag.AuxCarry = ((reg.A & 0xF) + (oreg & 0xF)) > 0xF;
-                flag.Parity = Utils.ParityTable[result] == 1;
-                reg.A = (byte)result;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (oreg & 0xF)) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Registers.A = (byte)result;
                 return retval;
             },
             Arity = 1,
@@ -550,28 +550,28 @@ namespace Emu8080
         // 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F
         public static Instruction ADC = new Instruction() {
             Text = "ADC",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var retval = false;
                 var oreg = (byte)0;
                 switch (args[0] & 0x7) {
-                    case 0: oreg = reg.B; break;
-                    case 1: oreg = reg.C; break;
-                    case 2: oreg = reg.D; break;
-                    case 3: oreg = reg.E; break;
-                    case 4: oreg = reg.H; break;
-                    case 5: oreg = reg.L; break;
-                    case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg = reg.A; break;
+                    case 0: oreg = cpu.Registers.B; break;
+                    case 1: oreg = cpu.Registers.C; break;
+                    case 2: oreg = cpu.Registers.D; break;
+                    case 3: oreg = cpu.Registers.E; break;
+                    case 4: oreg = cpu.Registers.H; break;
+                    case 5: oreg = cpu.Registers.L; break;
+                    case 6: oreg = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: oreg = cpu.Registers.A; break;
                 }
-                var carryamt = flag.Carry ? 1 : 0;
-                var result = reg.A + oreg + carryamt;
-                flag.Carry = (result > 0xFF);
+                var carryamt = cpu.Flag.Carry ? 1 : 0;
+                var result = cpu.Registers.A + oreg + carryamt;
+                cpu.Flag.Carry = (result > 0xFF);
                 result = (byte)(result & 0xFF);
-                flag.Zero = (result == 0);
-                flag.Sign = (result >> 7) == 1;
-                flag.AuxCarry = ((reg.A & 0xF) + (oreg & 0xF) + carryamt) > 0xF;
-                flag.Parity = Utils.ParityTable[result] == 1;
-                reg.A = (byte)result;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (oreg & 0xF) + carryamt) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Registers.A = (byte)result;
                 return retval;
             },
             Arity = 1,
@@ -586,28 +586,28 @@ namespace Emu8080
         // 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97
         public static Instruction SUB = new Instruction() {
             Text = "SUB",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var retval = false;
                 var oreg = (byte)0;
                 switch (args[0] & 0x7) {
-                    case 0: oreg = reg.B; break;
-                    case 1: oreg = reg.C; break;
-                    case 2: oreg = reg.D; break;
-                    case 3: oreg = reg.E; break;
-                    case 4: oreg = reg.H; break;
-                    case 5: oreg = reg.L; break;
-                    case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg = reg.A; break;
+                    case 0: oreg = cpu.Registers.B; break;
+                    case 1: oreg = cpu.Registers.C; break;
+                    case 2: oreg = cpu.Registers.D; break;
+                    case 3: oreg = cpu.Registers.E; break;
+                    case 4: oreg = cpu.Registers.H; break;
+                    case 5: oreg = cpu.Registers.L; break;
+                    case 6: oreg = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: oreg = cpu.Registers.A; break;
                 }
                 var twocomp = (~oreg + 1) & 0xFF;
-                var result = reg.A + ((~oreg + 1) & 0xFF);
-                flag.Carry = (result <= 0xFF);
+                var result = cpu.Registers.A + ((~oreg + 1) & 0xFF);
+                cpu.Flag.Carry = (result <= 0xFF);
                 result = (byte)(result & 0xFF);
-                flag.Zero = (result == 0);
-                flag.Sign = (result >> 7) == 1;
-                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
-                flag.Parity = Utils.ParityTable[result] == 1;
-                reg.A = (byte)result;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Registers.A = (byte)result;
                 return retval;
             },
             Arity = 1,
@@ -622,29 +622,29 @@ namespace Emu8080
         // 0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F
         public static Instruction SBB = new Instruction() {
             Text = "SBB",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var retval = false;
                 var oreg = (byte)0;
                 switch (args[0] & 0x7) {
-                    case 0: oreg = reg.B; break;
-                    case 1: oreg = reg.C; break;
-                    case 2: oreg = reg.D; break;
-                    case 3: oreg = reg.E; break;
-                    case 4: oreg = reg.H; break;
-                    case 5: oreg = reg.L; break;
-                    case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg = reg.A; break;
+                    case 0: oreg = cpu.Registers.B; break;
+                    case 1: oreg = cpu.Registers.C; break;
+                    case 2: oreg = cpu.Registers.D; break;
+                    case 3: oreg = cpu.Registers.E; break;
+                    case 4: oreg = cpu.Registers.H; break;
+                    case 5: oreg = cpu.Registers.L; break;
+                    case 6: oreg = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: oreg = cpu.Registers.A; break;
                 }
-                var carryamt = flag.Carry ? 1 : 0;
+                var carryamt = cpu.Flag.Carry ? 1 : 0;
                 var twocomp = (~(oreg + carryamt) + 1) & 0xFF;
-                var result = reg.A + twocomp;
-                flag.Carry = (result <= 0xFF);
+                var result = cpu.Registers.A + twocomp;
+                cpu.Flag.Carry = (result <= 0xFF);
                 result = (byte)(result & 0xFF);
-                flag.Zero = (result == 0);
-                flag.Sign = (result >> 7) == 1;
-                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
-                flag.Parity = Utils.ParityTable[result] == 1;
-                reg.A = (byte)result;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Registers.A = (byte)result;
                 return retval;
             },
             Arity = 1,
@@ -659,25 +659,25 @@ namespace Emu8080
         // 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7
         public static Instruction ANA = new Instruction() {
             Text = "ANA",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var oreg = (byte)0;
                 var retval = false;
                 switch (args[0] & 0x7) {
-                    case 0: oreg = reg.B; break;
-                    case 1: oreg = reg.C; break;
-                    case 2: oreg = reg.D; break;
-                    case 3: oreg = reg.E; break;
-                    case 4: oreg = reg.H; break;
-                    case 5: oreg = reg.L; break;
-                    case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg = reg.A; break;
+                    case 0: oreg = cpu.Registers.B; break;
+                    case 1: oreg = cpu.Registers.C; break;
+                    case 2: oreg = cpu.Registers.D; break;
+                    case 3: oreg = cpu.Registers.E; break;
+                    case 4: oreg = cpu.Registers.H; break;
+                    case 5: oreg = cpu.Registers.L; break;
+                    case 6: oreg = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: oreg = cpu.Registers.A; break;
                 }
-                var result = (byte)(reg.A & oreg);
-                flag.Carry = false;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.Sign = (result >> 7) == 1;
-                reg.A = result;
+                var result = (byte)(cpu.Registers.A & oreg);
+                cpu.Flag.Carry = false;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Registers.A = result;
                 return retval;
             },
             Arity = 1,
@@ -692,26 +692,26 @@ namespace Emu8080
         // 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF
         public static Instruction XRA = new Instruction() {
             Text = "XRA",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var oreg = (byte)0;
                 var retval = false;
                 switch (args[0] & 0x7) {
-                    case 0: oreg = reg.B; break;
-                    case 1: oreg = reg.C; break;
-                    case 2: oreg = reg.D; break;
-                    case 3: oreg = reg.E; break;
-                    case 4: oreg = reg.H; break;
-                    case 5: oreg = reg.L; break;
-                    case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg = reg.A; break;
+                    case 0: oreg = cpu.Registers.B; break;
+                    case 1: oreg = cpu.Registers.C; break;
+                    case 2: oreg = cpu.Registers.D; break;
+                    case 3: oreg = cpu.Registers.E; break;
+                    case 4: oreg = cpu.Registers.H; break;
+                    case 5: oreg = cpu.Registers.L; break;
+                    case 6: oreg = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: oreg = cpu.Registers.A; break;
                 }
-                var result = (byte)(reg.A ^ oreg);
-                flag.Carry = false;
-                flag.AuxCarry = false;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.Sign = (result >> 7) == 1;
-                reg.A = result;
+                var result = (byte)(cpu.Registers.A ^ oreg);
+                cpu.Flag.Carry = false;
+                cpu.Flag.AuxCarry = false;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Registers.A = result;
                 return retval;
             },
             Arity = 1,
@@ -726,25 +726,25 @@ namespace Emu8080
         // 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7
         public static Instruction ORA = new Instruction() {
             Text = "ORA",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var oreg = (byte)0;
                 var retval = false;
                 switch (args[0] & 0x7) {
-                    case 0: oreg = reg.B; break;
-                    case 1: oreg = reg.C; break;
-                    case 2: oreg = reg.D; break;
-                    case 3: oreg = reg.E; break;
-                    case 4: oreg = reg.H; break;
-                    case 5: oreg = reg.L; break;
-                    case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg = reg.A; break;
+                    case 0: oreg = cpu.Registers.B; break;
+                    case 1: oreg = cpu.Registers.C; break;
+                    case 2: oreg = cpu.Registers.D; break;
+                    case 3: oreg = cpu.Registers.E; break;
+                    case 4: oreg = cpu.Registers.H; break;
+                    case 5: oreg = cpu.Registers.L; break;
+                    case 6: oreg = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: oreg = cpu.Registers.A; break;
                 }
-                var result = (byte)(reg.A | oreg);
-                flag.Carry = false;
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.Sign = (result >> 7) == 1;
-                reg.A = result;
+                var result = (byte)(cpu.Registers.A | oreg);
+                cpu.Flag.Carry = false;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Registers.A = result;
                 return retval;
             },
             Arity = 1,
@@ -759,26 +759,26 @@ namespace Emu8080
         // 0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF
         public static Instruction CMP = new Instruction() {
             Text = "CMP",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var oreg = (byte)0;
                 var retval = false;
                 switch (args[0] & 0x7) {
-                    case 0: oreg = reg.B; break;
-                    case 1: oreg = reg.C; break;
-                    case 2: oreg = reg.D; break;
-                    case 3: oreg = reg.E; break;
-                    case 4: oreg = reg.H; break;
-                    case 5: oreg = reg.L; break;
-                    case 6: oreg = mem[reg.HL]; retval = true; break;
-                    case 7: oreg = reg.A; break;
+                    case 0: oreg = cpu.Registers.B; break;
+                    case 1: oreg = cpu.Registers.C; break;
+                    case 2: oreg = cpu.Registers.D; break;
+                    case 3: oreg = cpu.Registers.E; break;
+                    case 4: oreg = cpu.Registers.H; break;
+                    case 5: oreg = cpu.Registers.L; break;
+                    case 6: oreg = cpu.Memory[cpu.Registers.HL]; retval = true; break;
+                    case 7: oreg = cpu.Registers.A; break;
                 }
                 oreg = (byte)((~oreg + 1) & 0xFF);
-                var result = reg.A + oreg;
-                flag.Carry = !(result > 0xFF);
-                flag.Zero = (result == 0);
-                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
-                flag.Sign = ((result & 0xFF) >> 7) == 1;
-                flag.AuxCarry = ((reg.A & 0xF) + (oreg & 0xF)) > 0xF;
+                var result = cpu.Registers.A + oreg;
+                cpu.Flag.Carry = !(result > 0xFF);
+                cpu.Flag.Zero = (result == 0);
+                cpu.Flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                cpu.Flag.Sign = ((result & 0xFF) >> 7) == 1;
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (oreg & 0xF)) > 0xF;
                 return retval;
             },
             Arity = 1,
@@ -793,10 +793,10 @@ namespace Emu8080
         // 0xC0
         public static Instruction RNZ = new Instruction() {
             Text = "RNZ",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Zero) {
-                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                    reg.SP += 2;
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Zero) {
+                    cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                    cpu.Registers.SP += 2;
                     return true;
                 }
                 return false;
@@ -813,26 +813,26 @@ namespace Emu8080
         // 0xC1, 0xD1, 0xE1, 0xF1
         public static Instruction POP = new Instruction() {
             Text = "POP",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 switch (((args[0] & 0x3F) >> 4)) {
                     case 0:
-                        reg.B = mem[reg.SP + 1];
-                        reg.C = mem[reg.SP];
+                        cpu.Registers.B = cpu.Memory[cpu.Registers.SP + 1];
+                        cpu.Registers.C = cpu.Memory[cpu.Registers.SP];
                         break;
                     case 1:
-                        reg.D = mem[reg.SP + 1];
-                        reg.E = mem[reg.SP];
+                        cpu.Registers.D = cpu.Memory[cpu.Registers.SP + 1];
+                        cpu.Registers.E = cpu.Memory[cpu.Registers.SP];
                         break;
                     case 2:
-                        reg.H = mem[reg.SP + 1];
-                        reg.L = mem[reg.SP];
+                        cpu.Registers.H = cpu.Memory[cpu.Registers.SP + 1];
+                        cpu.Registers.L = cpu.Memory[cpu.Registers.SP];
                         break;
                     case 3:
-                        reg.A = mem[reg.SP + 1];
-                        flag.FlagByte = mem[reg.SP];
+                        cpu.Registers.A = cpu.Memory[cpu.Registers.SP + 1];
+                        cpu.Flag.FlagByte = cpu.Memory[cpu.Registers.SP];
                         break;
                 }
-                reg.SP += 2;
+                cpu.Registers.SP += 2;
                 return true;
             },
             Arity = 1,
@@ -846,9 +846,9 @@ namespace Emu8080
         // 0xC2
         public static Instruction JNZ = new Instruction() {
             Text = "JNZ",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Zero) {
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Zero) {
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 }
                 return true;
             },
@@ -863,8 +863,8 @@ namespace Emu8080
         // 0xC3
         public static Instruction JMP = new Instruction() {
             Text = "JMP",
-            Execute = (mem, args, reg, flag) => {
-                reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 return true;
             },
             Arity = 3,
@@ -878,12 +878,12 @@ namespace Emu8080
         // 0xC4
         public static Instruction CNZ = new Instruction() {
             Text = "CNZ",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Zero) {
-                    mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                    mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                    reg.SP -= 2;
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Zero) {
+                    cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                    cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                    cpu.Registers.SP -= 2;
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                     return true;
                 }
                 return false;
@@ -900,26 +900,26 @@ namespace Emu8080
         // 0xC5, 0xD5, 0xE5, 0xF5
         public static Instruction PUSH = new Instruction() {
             Text = "PUSH",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 switch (((args[0] & 0x3F) >> 4)) {
                     case 0:
-                        mem[reg.SP - 1] = reg.B;
-                        mem[reg.SP - 2] = reg.C;
+                        cpu.Memory[cpu.Registers.SP - 1] = cpu.Registers.B;
+                        cpu.Memory[cpu.Registers.SP - 2] = cpu.Registers.C;
                         break;
                     case 1:
-                        mem[reg.SP - 1] = reg.D;
-                        mem[reg.SP - 2] = reg.E;
+                        cpu.Memory[cpu.Registers.SP - 1] = cpu.Registers.D;
+                        cpu.Memory[cpu.Registers.SP - 2] = cpu.Registers.E;
                         break;
                     case 2:
-                        mem[reg.SP - 1] = reg.H;
-                        mem[reg.SP - 2] = reg.L;
+                        cpu.Memory[cpu.Registers.SP - 1] = cpu.Registers.H;
+                        cpu.Memory[cpu.Registers.SP - 2] = cpu.Registers.L;
                         break;
                     case 3:
-                        mem[reg.SP - 1] = reg.A;
-                        mem[reg.SP - 2] = flag.FlagByte;
+                        cpu.Memory[cpu.Registers.SP - 1] = cpu.Registers.A;
+                        cpu.Memory[cpu.Registers.SP - 2] = cpu.Flag.FlagByte;
                         break;
                 }
-                reg.SP -= 2;
+                cpu.Registers.SP -= 2;
                 return true;
             },
             Arity = 1,
@@ -933,14 +933,14 @@ namespace Emu8080
         // 0xC6
         public static Instruction ADI = new Instruction() {
             Text = "ADI",
-            Execute = (mem, args, reg, flag) => {
-                var result = reg.A + args[1];
-                flag.Carry = (result > 0xFF);
-                flag.AuxCarry = ((reg.A & 0xF) + (args[1] & 0xF)) > 0xF;
-                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
-                flag.Sign = ((result & 0xFF) >> 7) == 1;
-                flag.Zero = (result == 0);
-                reg.A = (byte)(result & 0xFF);
+            Execute = (cpu, args) => {
+                var result = cpu.Registers.A + args[1];
+                cpu.Flag.Carry = (result > 0xFF);
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (args[1] & 0xF)) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                cpu.Flag.Sign = ((result & 0xFF) >> 7) == 1;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Registers.A = (byte)(result & 0xFF);
                 return true;
             },
             Arity = 2,
@@ -954,10 +954,10 @@ namespace Emu8080
         // 0xC8
         public static Instruction RZ = new Instruction() {
             Text = "RZ",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Zero) {
-                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                    reg.SP += 2;
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Zero) {
+                    cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                    cpu.Registers.SP += 2;
                     return true;
                 }
                 return false;
@@ -974,9 +974,9 @@ namespace Emu8080
         // 0xC9 (0xD9)
         public static Instruction RET = new Instruction() {
             Text = "RET",
-            Execute = (mem, args, reg, flag) => {
-                reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                reg.SP += 2;
+            Execute = (cpu, args) => {
+                cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                cpu.Registers.SP += 2;
                 return true;
             },
             Arity = 1,
@@ -990,9 +990,9 @@ namespace Emu8080
         // 0xCA
         public static Instruction JZ = new Instruction() {
             Text = "JZ",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Zero) {
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Zero) {
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 }
                 return true;
             },
@@ -1007,12 +1007,12 @@ namespace Emu8080
         // 0xCC
         public static Instruction CZ = new Instruction() {
             Text = "CZ",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Zero) {
-                    mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                    mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                    reg.SP -= 2;
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Zero) {
+                    cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                    cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                    cpu.Registers.SP -= 2;
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                     return true;
                 }
                 return false;
@@ -1029,11 +1029,11 @@ namespace Emu8080
         // 0xCD (0xDD, 0xED, 0xFD)
         public static Instruction CALL = new Instruction() {
             Text = "CALL",
-            Execute = (mem, args, reg, flag) => {
-                mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                reg.SP -= 2;
-                reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                cpu.Registers.SP -= 2;
+                cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 return true;
             },
             Arity = 3,
@@ -1047,15 +1047,15 @@ namespace Emu8080
         // 0xCE
         public static Instruction ACI = new Instruction() {
             Text = "ACI",
-            Execute = (mem, args, reg, flag) => {
-                var carryb = flag.Carry ? 1 : 0;
-                var result = reg.A + args[1] + carryb;
-                flag.Carry = (result > 0xFF);
-                flag.AuxCarry = ((reg.A & 0xF) + (args[1] & 0xF) + carryb) > 0xF;
-                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
-                flag.Sign = ((result & 0xFF) >> 7) == 1;
-                flag.Zero = (result == 0);
-                reg.A = (byte)(result & 0xFF);
+            Execute = (cpu, args) => {
+                var carryb = cpu.Flag.Carry ? 1 : 0;
+                var result = cpu.Registers.A + args[1] + carryb;
+                cpu.Flag.Carry = (result > 0xFF);
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (args[1] & 0xF) + carryb) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                cpu.Flag.Sign = ((result & 0xFF) >> 7) == 1;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Registers.A = (byte)(result & 0xFF);
                 return true;
             },
             Arity = 2,
@@ -1069,10 +1069,10 @@ namespace Emu8080
         // 0xD0
         public static Instruction RNC = new Instruction() {
             Text = "RNC",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Carry) {
-                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                    reg.SP += 2;
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Carry) {
+                    cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                    cpu.Registers.SP += 2;
                     return true;
                 }
                 return false;
@@ -1089,9 +1089,9 @@ namespace Emu8080
         // 0xD2
         public static Instruction JNC = new Instruction() {
             Text = "JNC",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Carry) {
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Carry) {
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 }
                 return true;
             },
@@ -1106,12 +1106,12 @@ namespace Emu8080
         // 0xD4
         public static Instruction CNC = new Instruction() {
             Text = "CNC",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Carry) {
-                    mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                    mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                    reg.SP -= 2;
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Carry) {
+                    cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                    cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                    cpu.Registers.SP -= 2;
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                     return true;
                 }
                 return false;
@@ -1128,15 +1128,15 @@ namespace Emu8080
         // 0xD6
         public static Instruction SUI = new Instruction() {
             Text = "SUI",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var twocomp = ((~args[1] + 1) & 0xFF);
-                var result = reg.A + twocomp;
-                flag.Carry = (result <= 0xFF);
-                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
-                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
-                flag.Sign = ((result & 0xFF) >> 7) == 1;
-                flag.Zero = (result == 0);
-                reg.A = (byte)(result & 0xFF);
+                var result = cpu.Registers.A + twocomp;
+                cpu.Flag.Carry = (result <= 0xFF);
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                cpu.Flag.Sign = ((result & 0xFF) >> 7) == 1;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Registers.A = (byte)(result & 0xFF);
                 return true;
             },
             Arity = 2,
@@ -1150,10 +1150,10 @@ namespace Emu8080
         // 0xD8
         public static Instruction RC = new Instruction() {
             Text = "RC",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Carry) {
-                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                    reg.SP += 2;
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Carry) {
+                    cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                    cpu.Registers.SP += 2;
                     return true;
                 }
                 return false;
@@ -1170,9 +1170,9 @@ namespace Emu8080
         // 0xDA
         public static Instruction JC = new Instruction() {
             Text = "JC",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Carry) {
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Carry) {
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 }
                 return true;
             },
@@ -1187,12 +1187,12 @@ namespace Emu8080
         // 0xDC
         public static Instruction CC = new Instruction() {
             Text = "CC",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Carry) {
-                    mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                    mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                    reg.SP -= 2;
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Carry) {
+                    cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                    cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                    cpu.Registers.SP -= 2;
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                     return true;
                 }
                 return false;
@@ -1209,16 +1209,16 @@ namespace Emu8080
         // 0xDE
         public static Instruction SBI = new Instruction() {
             Text = "SBI",
-            Execute = (mem, args, reg, flag) => {
-                var carryb = flag.Carry ? 1 : 0;
+            Execute = (cpu, args) => {
+                var carryb = cpu.Flag.Carry ? 1 : 0;
                 var twocomp = ((~(args[1] + carryb) + 1) & 0xFF);
-                var result = reg.A + twocomp;
-                flag.Carry = (result <= 0xFF);
-                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
-                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
-                flag.Sign = ((result & 0xFF) >> 7) == 1;
-                flag.Zero = (result == 0);
-                reg.A = (byte)(result & 0xFF);
+                var result = cpu.Registers.A + twocomp;
+                cpu.Flag.Carry = (result <= 0xFF);
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                cpu.Flag.Sign = ((result & 0xFF) >> 7) == 1;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Registers.A = (byte)(result & 0xFF);
                 return true;
             },
             Arity = 2,
@@ -1232,10 +1232,10 @@ namespace Emu8080
         // 0xE0
         public static Instruction RPO = new Instruction() {
             Text = "RPO",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Parity) {
-                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                    reg.SP += 2;
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Parity) {
+                    cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                    cpu.Registers.SP += 2;
                     return true;
                 }
                 return false;
@@ -1252,9 +1252,9 @@ namespace Emu8080
         // 0xE2
         public static Instruction JPO = new Instruction() {
             Text = "JPO",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Parity) {
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Parity) {
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 }
                 return true;
             },
@@ -1269,13 +1269,13 @@ namespace Emu8080
         // 0xE3
         public static Instruction XTHL = new Instruction() {
             Text = "XTHL",
-            Execute = (mem, args, reg, flag) => {
-                byte temp1 = mem[reg.SP];
-                byte temp2 = mem[reg.SP + 1];
-                mem[reg.SP] = reg.L;
-                mem[reg.SP + 1] = reg.H;
-                reg.L = temp1;
-                reg.H = temp2;
+            Execute = (cpu, args) => {
+                byte temp1 = cpu.Memory[cpu.Registers.SP];
+                byte temp2 = cpu.Memory[cpu.Registers.SP + 1];
+                cpu.Memory[cpu.Registers.SP] = cpu.Registers.L;
+                cpu.Memory[cpu.Registers.SP + 1] = cpu.Registers.H;
+                cpu.Registers.L = temp1;
+                cpu.Registers.H = temp2;
                 return true;
             },
             Arity = 1,
@@ -1289,12 +1289,12 @@ namespace Emu8080
         // 0xE4
         public static Instruction CPO = new Instruction() {
             Text = "CPO",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Parity) {
-                    mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                    mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                    reg.SP -= 2;
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Parity) {
+                    cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                    cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                    cpu.Registers.SP -= 2;
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                     return true;
                 }
                 return false;
@@ -1311,14 +1311,14 @@ namespace Emu8080
         // 0xE6
         public static Instruction ANI = new Instruction() {
             Text = "ANI",
-            Execute = (mem, args, reg, flag) => {
-                var result = (byte)(reg.A & args[1]);
-                flag.Carry = false;
-                flag.AuxCarry = ((reg.A | args[1]) & 0x08) != 0;
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.Sign = (result >> 7) == 1;
-                flag.Zero = (result == 0);
-                reg.A = result;
+            Execute = (cpu, args) => {
+                var result = (byte)(cpu.Registers.A & args[1]);
+                cpu.Flag.Carry = false;
+                cpu.Flag.AuxCarry = ((cpu.Registers.A | args[1]) & 0x08) != 0;
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Registers.A = result;
                 return true;
             },
             Arity = 2,
@@ -1332,10 +1332,10 @@ namespace Emu8080
         // 0xE8
         public static Instruction RPE = new Instruction() {
             Text = "RPE",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Parity) {
-                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                    reg.SP += 2;
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Parity) {
+                    cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                    cpu.Registers.SP += 2;
                     return true;
                 }
                 return false;
@@ -1352,9 +1352,9 @@ namespace Emu8080
         // 0xEA
         public static Instruction JPE = new Instruction() {
             Text = "JPE",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Parity) {
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Parity) {
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 }
                 return true;
             },
@@ -1369,10 +1369,10 @@ namespace Emu8080
         // 0xEB
         public static Instruction XCHG = new Instruction() {
             Text = "XCHG",
-            Execute = (mem, args, reg, flag) => {
-                ushort temp = reg.HL;
-                reg.HL = reg.DE;
-                reg.DE = temp;
+            Execute = (cpu, args) => {
+                ushort temp = cpu.Registers.HL;
+                cpu.Registers.HL = cpu.Registers.DE;
+                cpu.Registers.DE = temp;
                 return true;
             },
             Arity = 1,
@@ -1386,12 +1386,12 @@ namespace Emu8080
         // 0xEC
         public static Instruction CPE = new Instruction() {
             Text = "CPE",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Parity) {
-                    mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                    mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                    reg.SP -= 2;
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Parity) {
+                    cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                    cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                    cpu.Registers.SP -= 2;
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                     return true;
                 }
                 return false;
@@ -1408,14 +1408,14 @@ namespace Emu8080
         // 0xEE
         public static Instruction XRI = new Instruction() {
             Text = "XRI",
-            Execute = (mem, args, reg, flag) => {
-                var result = (byte)(reg.A ^ args[1]);
-                flag.Carry = false;
-                flag.AuxCarry = ((reg.A | args[1]) & 0x08) != 0;
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.Sign = (result >> 7) == 1;
-                flag.Zero = (result == 0);
-                reg.A = result;
+            Execute = (cpu, args) => {
+                var result = (byte)(cpu.Registers.A ^ args[1]);
+                cpu.Flag.Carry = false;
+                cpu.Flag.AuxCarry = ((cpu.Registers.A | args[1]) & 0x08) != 0;
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Registers.A = result;
                 return true;
             },
             Arity = 2,
@@ -1429,8 +1429,8 @@ namespace Emu8080
         // 0xE9
         public static Instruction PCHL = new Instruction() {
             Text = "PCHL",
-            Execute = (mem, args, reg, flag) => {
-                reg.PC = reg.HL;
+            Execute = (cpu, args) => {
+                cpu.Registers.PC = cpu.Registers.HL;
                 return true;
             },
             Arity = 1,
@@ -1444,10 +1444,10 @@ namespace Emu8080
         // 0xF0
         public static Instruction RP = new Instruction() {
             Text = "RP",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Sign) {
-                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                    reg.SP += 2;
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Sign) {
+                    cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                    cpu.Registers.SP += 2;
                     return true;
                 }
                 return false;
@@ -1464,9 +1464,9 @@ namespace Emu8080
         // 0xF2
         public static Instruction JP = new Instruction() {
             Text = "JP",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Sign) {
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Sign) {
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 }
                 return true;
             },
@@ -1481,12 +1481,12 @@ namespace Emu8080
         // 0xF4
         public static Instruction CP = new Instruction() {
             Text = "CP",
-            Execute = (mem, args, reg, flag) => {
-                if (!flag.Sign) {
-                    mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                    mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                    reg.SP -= 2;
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (!cpu.Flag.Sign) {
+                    cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                    cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                    cpu.Registers.SP -= 2;
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                     return true;
                 }
                 return false;
@@ -1503,14 +1503,14 @@ namespace Emu8080
         // 0xF6
         public static Instruction ORI = new Instruction() {
             Text = "ORI",
-            Execute = (mem, args, reg, flag) => {
-                var result = (byte)(reg.A | args[1]);
-                flag.Carry = false;
-                flag.AuxCarry = (result & 0x08) != 0;
-                flag.Parity = Utils.ParityTable[result] == 1;
-                flag.Sign = (result >> 7) == 1;
-                flag.Zero = (result == 0);
-                reg.A = result;
+            Execute = (cpu, args) => {
+                var result = (byte)(cpu.Registers.A | args[1]);
+                cpu.Flag.Carry = false;
+                cpu.Flag.AuxCarry = (result & 0x08) != 0;
+                cpu.Flag.Parity = Utils.ParityTable[result] == 1;
+                cpu.Flag.Sign = (result >> 7) == 1;
+                cpu.Flag.Zero = (result == 0);
+                cpu.Registers.A = result;
                 return true;
             },
             Arity = 2,
@@ -1524,10 +1524,10 @@ namespace Emu8080
         // 0xF8
         public static Instruction RM = new Instruction() {
             Text = "RM",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Sign) {
-                    reg.PC = (ushort)((mem[reg.SP + 1] << 8) | mem[reg.SP]);
-                    reg.SP += 2;
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Sign) {
+                    cpu.Registers.PC = (ushort)((cpu.Memory[cpu.Registers.SP + 1] << 8) | cpu.Memory[cpu.Registers.SP]);
+                    cpu.Registers.SP += 2;
                     return true;
                 }
                 return false;
@@ -1544,8 +1544,8 @@ namespace Emu8080
         // 0xF9
         public static Instruction SPHL = new Instruction() {
             Text = "SPHL",
-            Execute = (mem, args, reg, flag) => {
-                reg.SP = reg.HL;
+            Execute = (cpu, args) => {
+                cpu.Registers.SP = cpu.Registers.HL;
                 return true;
             },
             Arity = 1,
@@ -1559,9 +1559,9 @@ namespace Emu8080
         // 0xFA
         public static Instruction JM = new Instruction() {
             Text = "JM",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Sign) {
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Sign) {
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                 }
                 return true;
             },
@@ -1576,12 +1576,12 @@ namespace Emu8080
         // 0xFC
         public static Instruction CM = new Instruction() {
             Text = "CM",
-            Execute = (mem, args, reg, flag) => {
-                if (flag.Sign) {
-                    mem[reg.SP - 1] = (byte)(reg.PC >> 8);
-                    mem[reg.SP - 2] = (byte)(reg.PC & 0xFF);
-                    reg.SP -= 2;
-                    reg.PC = (ushort)((args[2] << 8) | args[1]);
+            Execute = (cpu, args) => {
+                if (cpu.Flag.Sign) {
+                    cpu.Memory[cpu.Registers.SP - 1] = (byte)(cpu.Registers.PC >> 8);
+                    cpu.Memory[cpu.Registers.SP - 2] = (byte)(cpu.Registers.PC & 0xFF);
+                    cpu.Registers.SP -= 2;
+                    cpu.Registers.PC = (ushort)((args[2] << 8) | args[1]);
                     return true;
                 }
                 return false;
@@ -1598,14 +1598,14 @@ namespace Emu8080
         // 0xFE
         public static Instruction CPI = new Instruction() {
             Text = "CPI",
-            Execute = (mem, args, reg, flag) => {
+            Execute = (cpu, args) => {
                 var twocomp = (byte)((~args[1] + 1) & 0xFF);
-                var result = reg.A + twocomp;
-                flag.Carry = !(result > 0xFF);
-                flag.AuxCarry = ((reg.A & 0xF) + (twocomp & 0xF)) > 0xF;
-                flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
-                flag.Sign = ((result & 0xFF) >> 7) == 1;
-                flag.Zero = (result == 0);
+                var result = cpu.Registers.A + twocomp;
+                cpu.Flag.Carry = !(result > 0xFF);
+                cpu.Flag.AuxCarry = ((cpu.Registers.A & 0xF) + (twocomp & 0xF)) > 0xF;
+                cpu.Flag.Parity = Utils.ParityTable[result & 0xFF] == 1;
+                cpu.Flag.Sign = ((result & 0xFF) >> 7) == 1;
+                cpu.Flag.Zero = (result == 0);
                 return true;
             },
             Arity = 2,

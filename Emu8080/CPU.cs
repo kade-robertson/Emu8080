@@ -31,7 +31,7 @@ namespace Emu8080
                     DebugStream.WriteLine(GetDebugText(todo, args));
                 }
                 Registers.PC += toadd;
-                var cycletouse = todo.Execute(Memory, args, Registers, Flag);
+                var cycletouse = todo.Execute(this, args);
                 return true;
             } catch (KeyNotFoundException) {
                 Console.WriteLine($"[0x{Registers.PC.ToString("X4")}] Error: Opcode 0x{inst.ToString("X2")} not found.");

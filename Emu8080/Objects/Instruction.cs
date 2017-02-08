@@ -5,14 +5,14 @@ namespace Emu8080
     public class Instruction 
     {
         //    mem,   args, registers, flag, success
-        public Func<byte[], byte[], CPURegisters, CPUFlag, bool> Execute;
+        public Func<CPU, byte[], bool> Execute;
         public string Text;     // the appropriate text representation
         public byte Arity;      // how many arguments the instruction has (including itself)
         public byte Cycles;     // how many cycles this takes when 'successful'
         public byte LowCycles;  // how many cycles this takes when 'unsuccessful'
         public Func<byte[], string> GetPrintString;
 
-        public Instruction(string text, Func<byte[], byte[], CPURegisters, CPUFlag, bool> execute, byte arity, byte cycles, byte lowcycles, Func<byte[], string> getprintstring) {
+        public Instruction(string text, Func<CPU, byte[], bool> execute, byte arity, byte cycles, byte lowcycles, Func<byte[], string> getprintstring) {
             Text = text;
             Execute = execute;
             Arity = arity;
