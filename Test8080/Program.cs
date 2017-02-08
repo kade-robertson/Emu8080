@@ -17,6 +17,7 @@ namespace Test8080
             Jumps.TestAll();
             Calls.TestAll();
             Returns.TestAll();
+            Restarts.TestAll();
 
             Console.Read();
         }

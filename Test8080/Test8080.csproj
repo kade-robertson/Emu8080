@@ -50,6 +50,7 @@
     <Compile Include="Tests\Jumps.cs" />
     <Compile Include="Tests\RegisterPair.cs" />
     <Compile Include="Tests\RegOrMemToAccum.cs" />
+    <Compile Include="Tests\Restarts.cs" />
     <Compile Include="Tests\Returns.cs" />
     <Compile Include="Tests\RotateAccum.cs" />
     <Compile Include="Tests\SingleRegister.cs" />

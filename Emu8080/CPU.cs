@@ -42,6 +42,12 @@ namespace Emu8080
             }
         }
 
+        public void StackPush(ushort inp) {
+            Memory[Registers.SP - 1] = (byte)(inp >> 8);
+            Memory[Registers.SP - 2] = (byte)(inp & 0xFF);
+            Registers.SP -= 2;
+        }
+
         public void StackPop(out ushort outp) {
             outp = (ushort)((Memory[Registers.SP + 1] << 8) | Memory[Registers.SP]);
             Registers.SP += 2;
