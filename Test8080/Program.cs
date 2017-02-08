@@ -16,6 +16,7 @@ namespace Test8080
             DirectAddressing.TestAll();
             Jumps.TestAll();
             Calls.TestAll();
+            Returns.TestAll();
 
             Console.Read();
         }
