@@ -4,12 +4,10 @@ namespace Emu8080
 {
     public class CPUBus 
     {
-        private CPU m_cpuref;
-
-        public delegate void InterruptChangedHandler(CPU cpu, EventArgs e);
-        public delegate void InputRequestedHandler(CPU cpu, EventArgs e);
-        public delegate void OutputReceivedHandler(CPU bus, EventArgs e);
-        public delegate void InterruptInvokedHandler(CPU bus, EventArgs e);
+        public delegate void InterruptChangedHandler();
+        public delegate void InputRequestedHandler();
+        public delegate void OutputReceivedHandler();
+        public delegate void InterruptInvokedHandler();
 
         public event InterruptChangedHandler InterruptChanged;
         public event InputRequestedHandler InputRequested;
@@ -18,30 +16,26 @@ namespace Emu8080
 
         private bool m_interrupt = false;
 
-        public CPUBus(CPU cpuref) {
-            m_cpuref = cpuref;
-        }
-
         public bool Interrupt {
             get {
                 return m_interrupt; 
             }
             set {
                 m_interrupt = value;
-                InterruptChanged?.Invoke(m_cpuref, null);
+                InterruptChanged?.Invoke();
             }
         }
 
         public void TriggerInterrupt() {
-            InterruptInvoked?.Invoke(m_cpuref, null);
+            InterruptInvoked?.Invoke();
         }
 
         public void RequestInput() {
-            InputRequested?.Invoke(m_cpuref, null);
+            InputRequested?.Invoke();
         }
 
         public void DeliverOutput() {
-            OutputReceived?.Invoke(m_cpuref, null);
+            OutputReceived?.Invoke();
         }
     }
 }
