@@ -511,6 +511,21 @@ namespace Emu8080
             }
         };
 
+        // HLT - Halt
+        // 0x76
+        public static Instruction HLT = new Instruction() {
+            Text = "HLT",
+            Execute = (cpu, args) => {
+                cpu.HasBeenHalted = true;
+                return true;
+            },
+            Arity = 1,
+            Cycles = 7,
+            GetPrintString = (args) => {
+                return "HLT";
+            }
+        };
+
         // ADD - Add Register or Memory To Accumulator
         // 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87
         public static Instruction ADD = new Instruction() {
@@ -1118,6 +1133,22 @@ namespace Emu8080
             }
         };
 
+        // OUT - Output
+        // 0xD3
+        public static Instruction OUT = new Instruction() {
+            Text = "IN",
+            Execute = (cpu, args) => {
+                cpu.IO.SetOutput(args[1], cpu.Registers.A);
+                cpu.Bus.DeliverOutput();
+                return true;
+            },
+            Arity = 2,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"OUT    {args[1].ToString("X2")}";
+            }
+        };
+
         // CNC - Call If No Carry
         // 0xD4
         public static Instruction CNC = new Instruction() {
@@ -1196,6 +1227,22 @@ namespace Emu8080
             Cycles = 10,
             GetPrintString = (args) => {
                 return $"JC     ${args[2].ToString("X2")}{args[1].ToString("X2")}";
+            }
+        };
+
+        // IN - Input
+        // 0xDB
+        public static Instruction IN = new Instruction() {
+            Text = "IN",
+            Execute = (cpu, args) => {
+                cpu.Bus.RequestInput();
+                cpu.Registers.A = cpu.IO.GetInput(args[1]);
+                return true;
+            },
+            Arity = 2,
+            Cycles = 10,
+            GetPrintString = (args) => {
+                return $"IN     {args[1].ToString("X2")}";
             }
         };
 
@@ -1676,7 +1723,7 @@ namespace Emu8080
             { 0x58, MOV  }, { 0x59, MOV  }, { 0x5A, MOV  }, { 0x5B, MOV  }, { 0x5C, MOV  }, { 0x5D, MOV  }, { 0x5E, MOV  }, { 0x5F, MOV  },
             { 0x60, MOV  }, { 0x61, MOV  }, { 0x62, MOV  }, { 0x63, MOV  }, { 0x64, MOV  }, { 0x65, MOV  }, { 0x66, MOV  }, { 0x67, MOV  },
             { 0x68, MOV  }, { 0x69, MOV  }, { 0x6A, MOV  }, { 0x6B, MOV  }, { 0x6C, MOV  }, { 0x6D, MOV  }, { 0x6E, MOV  }, { 0x6F, MOV  },
-            { 0x70, MOV  }, { 0x71, MOV  }, { 0x72, MOV  }, { 0x73, MOV  }, { 0x74, MOV  }, { 0x75, MOV  }, { 0x77, MOV  },
+            { 0x70, MOV  }, { 0x71, MOV  }, { 0x72, MOV  }, { 0x73, MOV  }, { 0x74, MOV  }, { 0x75, MOV  }, { 0x77, MOV  }, { 0x76, HLT  },
             { 0x78, MOV  }, { 0x79, MOV  }, { 0x7A, MOV  }, { 0x7B, MOV  }, { 0x7C, MOV  }, { 0x7D, MOV  }, { 0x7E, MOV  }, { 0x7F, MOV  },
             { 0x80, ADD  }, { 0x81, ADD  }, { 0x82, ADD  }, { 0x83, ADD  }, { 0x84, ADD  }, { 0x85, ADD  }, { 0x86, ADD  }, { 0x87, ADD  },
             { 0x88, ADC  }, { 0x89, ADC  }, { 0x8A, ADC  }, { 0x8B, ADC  }, { 0x8C, ADC  }, { 0x8D, ADC  }, { 0x8E, ADC  }, { 0x8F, ADC  },
@@ -1688,8 +1735,8 @@ namespace Emu8080
             { 0xB8, CMP  }, { 0xB9, CMP  }, { 0xBA, CMP  }, { 0xBB, CMP  }, { 0xBC, CMP  }, { 0xBD, CMP  }, { 0xBE, CMP  }, { 0xBF, CMP  },
             { 0xC0, RNZ  }, { 0xC1, POP  }, { 0xC2, JNZ  }, { 0xC3, JMP  }, { 0xC4, CNZ  }, { 0xC5, PUSH }, { 0xC6, ADI  }, { 0xC7, RST  },
             { 0xC8, RZ   }, { 0xC9, RET  }, { 0xCA, JZ   }, { 0xCB, JMP  }, { 0xCC, CZ   }, { 0xCD, CALL }, { 0xCE, ACI  }, { 0xCF, RST  },
-            { 0xD0, RNC  }, { 0xD1, POP  }, { 0xD2, JNC  }, { 0xD4, CNC  }, { 0xD5, PUSH }, { 0xD6, SUI  }, { 0xD7, RST  },
-            { 0xD8, RC   }, { 0xD9, RET  }, { 0xDA, JC   }, { 0xDC, CC   }, { 0xDD, CALL }, { 0xDE, SBI  }, { 0xDF, RST  },
+            { 0xD0, RNC  }, { 0xD1, POP  }, { 0xD2, JNC  }, { 0xD3, OUT  }, { 0xD4, CNC  }, { 0xD5, PUSH }, { 0xD6, SUI  }, { 0xD7, RST  },
+            { 0xD8, RC   }, { 0xD9, RET  }, { 0xDA, JC   }, { 0xDB, IN   }, { 0xDC, CC   }, { 0xDD, CALL }, { 0xDE, SBI  }, { 0xDF, RST  },
             { 0xE0, RPO  }, { 0xE1, POP  }, { 0xE2, JPO  }, { 0xE3, XTHL }, { 0xE4, CPO  }, { 0xE5, PUSH }, { 0xE6, ANI  }, { 0xE7, RST  },
             { 0xE8, RPE  }, { 0xE9, PCHL }, { 0xEA, JPE  }, { 0xEB, XCHG }, { 0xEC, CPE  }, { 0xED, CALL }, { 0xEE, XRI  }, { 0xEF, RST  },
             { 0xF0, RP   }, { 0xF1, POP  }, { 0xF2, JP   }, { 0xFB, DI   }, { 0xF4, CP   }, { 0xF5, PUSH }, { 0xF6, ORI  }, { 0xF7, RST  },

@@ -12,27 +12,31 @@ namespace Emu8080
         public CPURegisters Registers;
         public CPUFlag Flag;
         public CPUBus Bus;
+        public CPUIO IO;
         public TextWriter DebugStream = Console.Out;
+        public bool HasBeenHalted = false;
 
         public bool Step(bool debug = false) {
             var inst = Memory[Registers.PC];
             try {
-                var todo = InstructionSet.Instructions[inst];
-                var args = new byte[3] { Memory[Registers.PC], 0, 0 };
-                var toadd = (ushort)1;
-                if (todo.Arity >= 2) {
-                    args[1] = Memory[Registers.PC + 1];
-                    toadd++;
+                if (!HasBeenHalted || !Bus.Interrupt) {
+                    var todo = InstructionSet.Instructions[inst];
+                    var args = new byte[3] { Memory[Registers.PC], 0, 0 };
+                    var toadd = (ushort)1;
+                    if (todo.Arity >= 2) {
+                        args[1] = Memory[Registers.PC + 1];
+                        toadd++;
+                    }
+                    if (todo.Arity == 3) {
+                        args[2] = Memory[Registers.PC + 2];
+                        toadd++;
+                    }
+                    if (debug) {
+                        DebugStream.WriteLine(GetDebugText(todo, args));
+                    }
+                    Registers.PC += toadd;
+                    var cycletouse = todo.Execute(this, args);
                 }
-                if (todo.Arity == 3) {
-                    args[2] = Memory[Registers.PC + 2];
-                    toadd++;
-                }
-                if (debug) {
-                    DebugStream.WriteLine(GetDebugText(todo, args));
-                }
-                Registers.PC += toadd;
-                var cycletouse = todo.Execute(this, args);
                 return true;
             } catch (KeyNotFoundException) {
                 Console.WriteLine($"[0x{Registers.PC.ToString("X4")}] Error: Opcode 0x{inst.ToString("X2")} not found.");
@@ -73,11 +77,23 @@ namespace Emu8080
             Memory = new byte[65536];
             Registers = new CPURegisters();
             Flag = new CPUFlag();
-            Bus = new CPUBus();
+            IO = new CPUIO();
+            Bus = new CPUBus(this);
+            Bus.InterruptInvoked += InterruptHandler;
         }
 
         public CPU(byte[] rom, int index = 0) : this() {
             Array.Copy(rom, 0, Memory, index, rom.Length);
+        }
+
+        public void Reset(byte[] rom) {
+            Memory = new byte[65536];
+            Registers = new CPURegisters();
+            Flag = new CPUFlag();
+            IO = new CPUIO();
+            Bus = new CPUBus(this);
+            Bus.InterruptInvoked += InterruptHandler;
+            Array.Copy(rom, 0, Memory, 0, rom.Length);
         }
 
         public bool Load(byte[] data, int index = 0) {
@@ -87,6 +103,10 @@ namespace Emu8080
             } catch {
                 return false;
             }
+        }
+
+        public void InterruptHandler(CPU cpu, EventArgs e) {
+            HasBeenHalted = false;
         }
     }
 }

@@ -44,7 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CPU.cs" />
+    <Compile Include="Objects\CPUBus.cs" />
     <Compile Include="Objects\CPUFlag.cs" />
+    <Compile Include="Objects\CPUIO.cs" />
     <Compile Include="Objects\Instruction.cs" />
     <Compile Include="InstructionSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
