@@ -58,7 +58,9 @@ namespace Debug8080
                 || rD.InvokeRequired
                 || rE.InvokeRequired
                 || rH.InvokeRequired
-                || rL.InvokeRequired) {
+                || rL.InvokeRequired
+                || rPC.InvokeRequired
+                || rSP.InvokeRequired) {
                 var c = new TBCallback(DoInstruction);
                 Invoke(c);
             } else {
@@ -77,6 +79,8 @@ namespace Debug8080
                 rE.Text = cpu.Registers.E.ToString("X2");
                 rH.Text = cpu.Registers.H.ToString("X2");
                 rL.Text = cpu.Registers.L.ToString("X2");
+                rPC.Text = cpu.Registers.PC.ToString("X4");
+                rSP.Text = cpu.Registers.SP.ToString("X4");
             }
         }
 
