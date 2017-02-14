@@ -63,10 +63,13 @@
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.rPC = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.rSP = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.rPC = new System.Windows.Forms.Label();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.lblIPS = new System.Windows.Forms.Label();
+            this.timer2 = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -85,7 +88,7 @@
             // textBox1
             // 
             this.textBox1.Font = new System.Drawing.Font("Courier New", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox1.Location = new System.Drawing.Point(12, 109);
+            this.textBox1.Location = new System.Drawing.Point(12, 126);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(435, 329);
@@ -95,7 +98,7 @@
             // 
             this.button1.Location = new System.Drawing.Point(93, 12);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(61, 23);
             this.button1.TabIndex = 2;
             this.button1.Text = "Run One";
             this.button1.UseVisualStyleBackColor = true;
@@ -103,9 +106,9 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(174, 13);
+            this.button2.Location = new System.Drawing.Point(159, 12);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.Size = new System.Drawing.Size(61, 23);
             this.button2.TabIndex = 3;
             this.button2.Text = "Run Ten";
             this.button2.UseVisualStyleBackColor = true;
@@ -267,7 +270,7 @@
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(255, 13);
+            this.button3.Location = new System.Drawing.Point(226, 12);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(104, 23);
             this.button3.TabIndex = 16;
@@ -421,9 +424,9 @@
             // 
             // numericUpDown1
             // 
-            this.numericUpDown1.Location = new System.Drawing.Point(365, 13);
+            this.numericUpDown1.Location = new System.Drawing.Point(336, 12);
             this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(82, 22);
+            this.numericUpDown1.Size = new System.Drawing.Size(45, 22);
             this.numericUpDown1.TabIndex = 31;
             this.numericUpDown1.Value = new decimal(new int[] {
             25,
@@ -483,26 +486,6 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Registers";
             // 
-            // rPC
-            // 
-            this.rPC.AutoSize = true;
-            this.rPC.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rPC.Location = new System.Drawing.Point(147, 35);
-            this.rPC.Name = "rPC";
-            this.rPC.Size = new System.Drawing.Size(35, 14);
-            this.rPC.TabIndex = 31;
-            this.rPC.Text = "0000";
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(155, 18);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(20, 13);
-            this.label10.TabIndex = 32;
-            this.label10.Text = "PC";
-            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // label11
             // 
             this.label11.AutoSize = true;
@@ -523,12 +506,58 @@
             this.rSP.TabIndex = 33;
             this.rSP.Text = "0000";
             // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(155, 18);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(20, 13);
+            this.label10.TabIndex = 32;
+            this.label10.Text = "PC";
+            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // rPC
+            // 
+            this.rPC.AutoSize = true;
+            this.rPC.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rPC.Location = new System.Drawing.Point(147, 35);
+            this.rPC.Name = "rPC";
+            this.rPC.Size = new System.Drawing.Size(35, 14);
+            this.rPC.TabIndex = 31;
+            this.rPC.Text = "0000";
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(387, 16);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(55, 17);
+            this.checkBox1.TabIndex = 34;
+            this.checkBox1.Text = "Print?";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // lblIPS
+            // 
+            this.lblIPS.AutoSize = true;
+            this.lblIPS.Location = new System.Drawing.Point(12, 108);
+            this.lblIPS.Name = "lblIPS";
+            this.lblIPS.Size = new System.Drawing.Size(118, 13);
+            this.lblIPS.TabIndex = 35;
+            this.lblIPS.Text = "Instructions / second:";
+            // 
+            // timer2
+            // 
+            this.timer2.Interval = 333;
+            this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(459, 449);
+            this.ClientSize = new System.Drawing.Size(460, 468);
+            this.Controls.Add(this.lblIPS);
+            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.numericUpDown1);
@@ -597,6 +626,9 @@
         private System.Windows.Forms.Label rSP;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label rPC;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.Label lblIPS;
+        private System.Windows.Forms.Timer timer2;
     }
 }
 

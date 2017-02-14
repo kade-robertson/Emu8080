@@ -1,6 +1,7 @@
 ﻿using Emu8080;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ namespace Debug8080
     {
         CPU cpu;
         Dictionary<ushort, KeyValuePair<Instruction, string>> instenum;
+        int instr;
+        Stopwatch s = new Stopwatch();
 
         delegate void TBCallback();
 
@@ -34,13 +37,13 @@ namespace Debug8080
 
         private void button1_Click(object sender, EventArgs e) {
             cpu.Step();
-            DoInstruction();
+            if (checkBox1.Checked) DoInstruction();
         }
 
         private void button2_Click(object sender, EventArgs e) {
             var counter = 10;
             while (cpu.Step() && counter > 0) {
-                Task.Run(() => DoInstruction());
+                if (checkBox1.Checked) Task.Run(() => DoInstruction());
                 counter--;
             }
         }
@@ -88,19 +91,30 @@ namespace Debug8080
             timer1.Enabled = timer1.Enabled ? false : true;
             timer1.Interval = (int)numericUpDown1.Value;
             if (timer1.Enabled) {
+                s.Start();
                 timer1.Start();
+                timer2.Start();
             } else {
+                s.Stop();
+                s.Reset();
+                instr = 0;
                 timer1.Stop();
+                timer2.Stop();
             }
         }
 
         private void timer1_Tick(object sender, EventArgs e) {
             cpu.Step();
-            DoInstruction();
+            instr += 1;
+            if (checkBox1.Checked) DoInstruction();
         }
 
         private void Form1_Load(object sender, EventArgs e) {
 
+        }
+
+        private void timer2_Tick(object sender, EventArgs e) {
+            lblIPS.Text = $"Instructions / second: {(instr / s.Elapsed.TotalSeconds).ToString("0.##")}";
         }
     }
 }
