@@ -141,7 +141,10 @@ namespace Emu8080
             }
         }
 
-        public void InterruptHandler() {
+        public void InterruptHandler(byte inst) {
+            var todo = InstructionSet.Instructions[inst];
+            var args = new byte[1] { Memory[Registers.PC] };
+            todo.Execute(this, args);
             HasBeenHalted = false;
         }
     }

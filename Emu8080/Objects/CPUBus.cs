@@ -7,7 +7,7 @@ namespace Emu8080
         public delegate void InterruptChangedHandler();
         public delegate void InputRequestedHandler();
         public delegate void OutputReceivedHandler();
-        public delegate void InterruptInvokedHandler();
+        public delegate void InterruptInvokedHandler(byte inst);
 
         public event InterruptChangedHandler InterruptChanged;
         public event InputRequestedHandler InputRequested;
@@ -26,8 +26,8 @@ namespace Emu8080
             }
         }
 
-        public void TriggerInterrupt() {
-            InterruptInvoked?.Invoke();
+        public void TriggerInterrupt(byte inst) {
+            InterruptInvoked?.Invoke(inst);
         }
 
         public void RequestInput() {

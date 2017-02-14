@@ -9,6 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test8080", "Test8080\Test80
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Debug8080", "Debug8080\Debug8080.csproj", "{A8E8FE1F-48AC-4C53-85B4-F86FF37C8BA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Play8080", "Play8080\Play8080.csproj", "{339A8627-2DBD-45BE-93E8-5B137EAA5D65}"
+	ProjectSection(ProjectDependencies) = postProject
+		{96810E32-2517-48BC-B41D-7119379CC5A9} = {96810E32-2517-48BC-B41D-7119379CC5A9}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +32,10 @@ Global
 		{A8E8FE1F-48AC-4C53-85B4-F86FF37C8BA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8E8FE1F-48AC-4C53-85B4-F86FF37C8BA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8E8FE1F-48AC-4C53-85B4-F86FF37C8BA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{339A8627-2DBD-45BE-93E8-5B137EAA5D65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{339A8627-2DBD-45BE-93E8-5B137EAA5D65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{339A8627-2DBD-45BE-93E8-5B137EAA5D65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{339A8627-2DBD-45BE-93E8-5B137EAA5D65}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
